@@ -173,16 +173,18 @@ export function MobileEntryForm({
   existingChallans,
   autocompleteData,
   onSaved,
+  mobileDefaultDate,
 }: {
   existingChallans: string[];
   autocompleteData: { fromParties: string[]; toParties: string[]; destinations: string[] };
   onSaved: () => void;
+  mobileDefaultDate?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setSaving] = useState(false);
 
   const defaultForm = (): FormData => ({
-    date: new Date().toISOString().split("T")[0],
+    date: mobileDefaultDate || new Date().toISOString().split("T")[0],
     challanNo: "",
     fromParty: "",
     toParty: "",
@@ -196,6 +198,13 @@ export function MobileEntryForm({
 
   const [form, setForm] = useState<FormData>(defaultForm());
   const [errors, setErrors] = useState<Errors>({});
+
+  // When default date changes, update form if it's currently at default
+  useEffect(() => {
+    if (!open) {
+      setForm(defaultForm());
+    }
+  }, [mobileDefaultDate, open]);
 
   const set = (key: keyof FormData, val: string) => {
     setForm((f) => ({ ...f, [key]: val }));

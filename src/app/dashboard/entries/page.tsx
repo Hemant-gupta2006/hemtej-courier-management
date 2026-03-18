@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { List, Trash2, AlertTriangle } from "lucide-react";
+import { List, Trash2, AlertTriangle, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ── Inline lightweight modal ──────────────────────────────────────────────
 function DeleteAllModal({
@@ -90,6 +91,84 @@ function DeleteAllModal({
   );
 }
 
+// ── Default Date Modal (Mobile Only) ──────────────────────────────────────
+function DefaultDateModal({
+  open,
+  onClose,
+  currentDefault,
+  onApply,
+  onReset,
+}: {
+  open: boolean;
+  onClose: () => void;
+  currentDefault: string | null;
+  onApply: (date: string) => void;
+  onReset: () => void;
+}) {
+  const [date, setDate] = useState(currentDefault || new Date().toISOString().split("T")[0]);
+
+  useEffect(() => {
+    if (open) setDate(currentDefault || new Date().toISOString().split("T")[0]);
+  }, [open, currentDefault]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="relative z-10 w-full max-w-sm rounded-[28px] bg-white dark:bg-slate-900 border border-white/20 dark:border-white/10 shadow-2xl p-6 space-y-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            Set Default Date
+          </h2>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+            Pick a date for all new entries
+          </label>
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="h-12 text-base rounded-xl border-slate-200 dark:border-slate-700 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="h-12 rounded-xl border-slate-200 dark:border-slate-700 font-semibold"
+          >
+            Reset
+          </Button>
+          <Button
+            onClick={() => onApply(date)}
+            className="h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+          >
+            Apply Default
+          </Button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────
 export default function CourierEntryPage() {
   const isMobile = useIsMobile();
@@ -104,6 +183,9 @@ export default function CourierEntryPage() {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [mobileDefaultDate, setMobileDefaultDate] = useState<string | null>(null);
+  const [defaultDateModalOpen, setDefaultDateModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     const [entRes, acRes] = await Promise.all([
@@ -144,11 +226,27 @@ export default function CourierEntryPage() {
 
   return (
     <>
-      <DeleteAllModal
+        <DeleteAllModal
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDeleteAll}
         loading={deleteLoading}
+      />
+
+      <DefaultDateModal
+        open={defaultDateModalOpen}
+        onClose={() => setDefaultDateModalOpen(false)}
+        currentDefault={mobileDefaultDate}
+        onApply={(d) => {
+          setMobileDefaultDate(d);
+          setDefaultDateModalOpen(false);
+          toast.success(`Default date set to ${d}`);
+        }}
+        onReset={() => {
+          setMobileDefaultDate(null);
+          setDefaultDateModalOpen(false);
+          toast.info("Default date cleared");
+        }}
       />
 
       <div className="h-full flex-1 flex-col space-y-8 flex">
@@ -161,6 +259,18 @@ export default function CourierEntryPage() {
                 : "Manage courier shipments. Click a cell to edit."}
             </p>
           </div>
+
+          {isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDefaultDateModalOpen(true)}
+              className="md:hidden rounded-xl border-blue-200 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 gap-1.5 h-9 font-semibold text-xs transition-all active:scale-95"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              {mobileDefaultDate ? mobileDefaultDate : "Set Default Date"}
+            </Button>
+          )}
 
           {!isMobile && (
             <div className="flex items-center gap-2">
@@ -232,6 +342,7 @@ export default function CourierEntryPage() {
             existingChallans={existingChallans}
             autocompleteData={autocompleteData}
             onSaved={fetchData}
+            mobileDefaultDate={mobileDefaultDate}
           />
         )}
       </div>
