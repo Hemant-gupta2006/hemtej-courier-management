@@ -31,8 +31,31 @@ export default async function DashboardPage() {
     take: 5
   });
 
+  const topSenderGroup = await prisma.courierEntry.groupBy({
+    by: ['fromParty'],
+    where: { userId },
+    _sum: { amount: true },
+    _count: { id: true },
+    orderBy: {
+      _sum: {
+        amount: 'desc'
+      }
+    },
+    take: 1
+  });
+
+  let topSender = { name: "N/A", amount: 0, count: 0 };
+  if (topSenderGroup.length > 0 && topSenderGroup[0].fromParty) {
+    topSender = {
+      name: topSenderGroup[0].fromParty,
+      amount: topSenderGroup[0]._sum.amount || 0,
+      count: topSenderGroup[0]._count.id || 0,
+    };
+  }
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent">
+      <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Welcome Back! 👋</h2>
@@ -124,12 +147,16 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Growth</CardTitle>
+            <CardTitle className="text-sm font-medium">Top Sender</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12%</div>
-            <p className="text-xs text-muted-foreground">Shipments compared to last month</p>
+            <div className="text-xl font-bold truncate" title={topSender.name}>
+              {topSender.name}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {topSender.count} {topSender.count === 1 ? 'parcel' : 'parcels'} • ₹{topSender.amount}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -165,6 +192,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   );
 }

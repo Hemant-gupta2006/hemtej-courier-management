@@ -873,7 +873,7 @@ export function DataTable<TData, TValue>({
                   {hg.headers.map((h) => (
                     <TableHead
                       key={h.id}
-                      className="text-slate-300 text-xs font-semibold uppercase tracking-wide h-11 whitespace-nowrap overflow-hidden text-ellipsis px-2 select-none"
+                      className="text-slate-300 text-xs font-semibold uppercase tracking-wide h-11 whitespace-nowrap overflow-hidden text-ellipsis px-1 select-none"
                       style={{ width: h.column.columnDef.size }}
                     >
                       {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}

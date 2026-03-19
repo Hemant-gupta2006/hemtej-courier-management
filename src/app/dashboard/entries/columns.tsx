@@ -109,7 +109,7 @@ const AutocompleteCell = ({ getValue, row, column, table }: any) => {
   };
 
   return (
-    <div className="h-10 w-full flex items-center px-2 relative overflow-hidden">
+    <div className="h-10 w-full flex items-center px-1 relative overflow-hidden">
       {suggestion && suggestion.toLowerCase().startsWith(value.toLowerCase()) && value.length > 0 && (
         <div className="absolute inset-x-2 pointer-events-none text-slate-400 dark:text-slate-600 z-10 bg-transparent truncate">
           <span className="opacity-0">{value}</span>
@@ -161,7 +161,7 @@ const EditableCell = ({ getValue, row, column, table }: any) => {
         ? ["Cash", "Account", "Pending", "Delivered"]
         : ["Surface", "Air", "Cargo", "V Fast"];
     return (
-      <div className="h-10 w-full flex items-center px-2 relative overflow-hidden">
+      <div className="h-10 w-full flex items-center px-1 relative overflow-hidden">
         <Select
           value={String(value)}
           onValueChange={(v) => {
@@ -193,7 +193,7 @@ const EditableCell = ({ getValue, row, column, table }: any) => {
   // ── Date ──
   if (column.id === "date") {
     return (
-      <div className="h-10 w-full flex items-center px-2 relative overflow-hidden">
+      <div className="h-10 w-full flex items-center px-1 relative overflow-hidden">
         <Input
           id={`cell-${identifier}-${column.id}`}
           ref={inputRef}
@@ -210,7 +210,7 @@ const EditableCell = ({ getValue, row, column, table }: any) => {
 
   // ── Generic text / number ──
   return (
-    <div className="h-10 w-full flex items-center px-2 relative overflow-hidden">
+    <div className="h-10 w-full flex items-center px-1 relative overflow-hidden">
       <Input
         id={`cell-${identifier}-${column.id}`}
         ref={inputRef}
@@ -280,7 +280,7 @@ const WeightCell = ({ getValue, row, column, table }: any) => {
     table.options.meta?.handleCellKeyDown(e, identifier, column.id, inputRef.current);
 
   return (
-    <div className="h-10 w-full flex items-center px-2 gap-1 relative overflow-hidden">
+    <div className="h-10 w-full flex items-center px-1 gap-1 relative overflow-hidden">
       <Input
         id={`cell-${identifier}-${column.id}`}
         ref={inputRef}
@@ -325,11 +325,11 @@ export const columns: ColumnDef<CourierEntry>[] = [
   {
     accessorKey: "srNo",
     header: "Sr.No",
-    size: 50,
+    size: 45,
     cell: ({ row }) => {
       const val = row.getValue("srNo") as number | string;
       return (
-        <div className="h-10 w-full flex items-center px-2 text-sm text-slate-300 truncate overflow-hidden whitespace-nowrap">
+        <div className="h-10 w-full flex items-center px-1 text-sm text-slate-300 truncate overflow-hidden whitespace-nowrap">
           {val === 999999999 ? "NEW" : val || "-"}
         </div>
       );
@@ -338,37 +338,37 @@ export const columns: ColumnDef<CourierEntry>[] = [
   {
     accessorKey: "date",
     header: "Date",
-    size: 145,
+    size: 130,
     cell: EditableCell
   },
   {
     accessorKey: "challanNo",
     header: "Challan No",
-    size: 90,
+    size: 80,
     cell: EditableCell
   },
   {
     accessorKey: "fromParty",
     header: "From Party",
-    size: 200,
+    size: 180,
     cell: AutocompleteCell
   },
   {
     accessorKey: "toParty",
     header: "To Party",
-    size: 200,
+    size: 180,
     cell: AutocompleteCell
   },
   {
     accessorKey: "weight",
     header: "Weight",
-    size: 100,
+    size: 90,
     cell: WeightCell
   },
   {
     accessorKey: "destination",
     header: "Destination",
-    size: 120,
+    size: 110,
     cell: AutocompleteCell
   },
   {
@@ -380,18 +380,18 @@ export const columns: ColumnDef<CourierEntry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 100,
+    size: 85,
     cell: EditableCell
   },
   {
     accessorKey: "mode",
     header: "Mode",
-    size: 100,
+    size: 85,
     cell: EditableCell
   },
   {
     id: "actions",
-    size: 70,
+    size: 110,
     cell: ({ row, table }) => {
       const entry = row.original as any;
       const identifier = entry.tempId || entry.id;
@@ -401,14 +401,13 @@ export const columns: ColumnDef<CourierEntry>[] = [
 
       if (isNew || isEdited) {
         return (
-          <div className="flex w-full h-10 items-center px-2 gap-1">
-
+          <div className="flex w-full h-10 items-center justify-center gap-[6px] px-1 overflow-hidden" style={{ minWidth: '110px', maxWidth: '130px' }}>
             {/* 🗑 DELETE BUTTON */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => table.options.meta?.deleteRow(entry.id, identifier)}
-              className="h-8 w-1/2 rounded-lg text-xs px-2 text-red-500 hover:bg-red-500/10 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="h-8 w-[40px] rounded-lg text-xs px-2 text-red-500 hover:bg-red-500/10 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98] shrink-0"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -430,27 +429,29 @@ export const columns: ColumnDef<CourierEntry>[] = [
                   table.options.meta?.saveEditedRow(identifier);
                 }
               }}
-              className={`h-8 w-1/2 rounded-lg text-xs px-2 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98] ${hasErrors
+              className={`h-8 w-[60px] rounded-lg text-xs px-1 flex items-center justify-center transition-transform hover:scale-[1.02] active:scale-[0.98] shrink-0 ${hasErrors
                 ? "bg-transparent text-slate-500 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
                 }`}
             >
-              <Save className="h-3 w-3 mr-1" />
-              {isNew ? "Save" : "Update"}
+              <Save className="h-3 w-3 mr-[2px]" />
+              {isNew ? "Save" : "Upd"}
             </Button>
           </div>
         );
       }
 
       return (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => table.options.meta?.deleteRow(entry.id, identifier)}
-          className="h-8 w-full rounded-lg text-xs px-2 text-red-500 hover:bg-red-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex w-full h-10 items-center justify-center px-1 overflow-hidden" style={{ minWidth: '110px', maxWidth: '130px' }}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => table.options.meta?.deleteRow(entry.id, identifier)}
+            className="h-8 w-full rounded-lg text-xs px-2 text-red-500 hover:bg-red-500/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       );
     },
   },
