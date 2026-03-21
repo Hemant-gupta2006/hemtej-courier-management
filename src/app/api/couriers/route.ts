@@ -27,44 +27,70 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { date, challanNo, fromParty, toParty, weight, destination, amount, status, mode } = body;
+    const userId = (session.user as any).id;
 
-    if (!challanNo) {
-      return new NextResponse("Missing Challan Number", { status: 400 });
-    }
+    const MAX_RETRIES = 5;
+    let attempts = 0;
+    let courier;
 
-    const existing = await prisma.courierEntry.findFirst({
-      where: {
-        challanNo: String(challanNo),
-        userId: (session.user as any).id
+    while (attempts < MAX_RETRIES) {
+      try {
+        courier = await prisma.$transaction(async (tx) => {
+          let assignedChallan = 1001;
+
+          if (challanNo) {
+            assignedChallan = parseInt(challanNo, 10);
+            if (isNaN(assignedChallan)) assignedChallan = 1001;
+          } else {
+            // Atomic fetch of MAX challanNo
+            const maxChallanResult = await tx.courierEntry.aggregate({
+              where: { userId },
+              _max: { challanNo: true }
+            });
+            assignedChallan = Number(maxChallanResult._max.challanNo || 1000) + 1;
+          }
+
+          // Atomic fetch of MAX srNo
+          const maxSrNoResult = await tx.courierEntry.aggregate({
+            where: { userId },
+            _max: { srNo: true }
+          });
+          const newSrNo = (maxSrNoResult._max.srNo || 0) + 1;
+
+          return await tx.courierEntry.create({
+            data: {
+              srNo: newSrNo,
+              userId,
+              date: new Date(date || new Date()),
+              challanNo: assignedChallan,
+              fromParty,
+              toParty,
+              weight: String(weight || "100g"),
+              destination,
+              amount: Number(amount) || 0,
+              status: status || "Cash",
+              mode: mode || "Surface",
+            }
+          });
+        });
+        break; // Sucessfully created
+      } catch (error: any) {
+        // P2002 is Prisma's unique constraint violation error code
+        if (error.code === 'P2002') {
+          // If the user manually provided a challan number and it collided, return 400 immediately
+          if (challanNo) {
+            return new NextResponse("Challan Number already exists", { status: 400 });
+          }
+
+          // If auto-generated, retry the transaction to get a new unique number
+          attempts++;
+          if (attempts === MAX_RETRIES) throw error;
+          await new Promise(res => setTimeout(res, 50));
+          continue; // Retry
+        }
+        throw error;
       }
-    });
-
-    if (existing) {
-      return new NextResponse("Challan Number already exists", { status: 400 });
     }
-
-    const maxSrNo = await prisma.courierEntry.aggregate({
-      where: { userId: (session.user as any).id },
-      _max: { srNo: true }
-    });
-
-    const newSrNo = (maxSrNo._max.srNo || 0) + 1;
-
-    const courier = await prisma.courierEntry.create({
-      data: {
-        srNo: newSrNo,
-        userId: (session.user as any).id,
-        date: new Date(date || new Date()),
-        challanNo: String(challanNo),
-        fromParty,
-        toParty,
-        weight: String(weight),
-        destination,
-        amount: Number(amount),
-        status,
-        mode: mode || "Surface",
-      }
-    });
 
     return NextResponse.json(courier);
   } catch (error) {
@@ -72,3 +98,4 @@ export async function POST(req: Request) {
     return new NextResponse("Internal server error", { status: 500 });
   }
 }
+

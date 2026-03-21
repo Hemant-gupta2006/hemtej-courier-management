@@ -183,9 +183,16 @@ export function MobileEntryForm({
   const [open, setOpen] = useState(false);
   const [loading, setSaving] = useState(false);
 
+  // Predict the next challan for UI purposes - Backend enforces actual number
   const getNextChallan = () => {
-    const nums = existingChallans.map(Number).filter(v => !isNaN(v) && v > 0);
-    return nums.length > 0 ? String(Math.max(...nums) + 1) : "1001";
+    if (!existingChallans || existingChallans.length === 0) return "1001";
+    
+    const nums = existingChallans
+      .map(ch => parseInt(ch, 10))
+      .filter(v => !isNaN(v) && v > 0);
+      
+    if (nums.length === 0) return "1001";
+    return String(Math.max(...nums) + 1);
   };
 
   const defaultForm = (): FormData => ({
@@ -259,7 +266,7 @@ export function MobileEntryForm({
       fromParty: capitalizeWords(form.fromParty),
       toParty: capitalizeWords(form.toParty),
       destination: capitalizeWords(form.destination),
-      challanNo: form.challanNo.trim(),
+      challanNo: form.challanNo.trim(), // Sent as a prediction, backend may assign a different one but usually matches
     };
 
     // Build weight as grams string
@@ -368,7 +375,7 @@ export function MobileEntryForm({
                 {/* Challan No */}
                 <div className="space-y-1.5">
                   <Label htmlFor="m-challan" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    Challan No <span className="text-red-500">*</span>
+                    Challan No (Predicted)
                   </Label>
                   <Input
                     id="m-challan"

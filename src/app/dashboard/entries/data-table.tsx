@@ -272,7 +272,7 @@ export function DataTable<TData, TValue>({
   const validateRow = (row: any, allData: any[]): Record<string, string> => {
     const errs: Record<string, string> = {};
     const id = row.tempId || row.id;
-    if (!String(row.challanNo ?? "").trim()) errs.challanNo = "Challan Number is required.";
+    if (!row.isNew && !String(row.challanNo ?? "").trim()) errs.challanNo = "Challan Number is required.";
     if (!String(row.fromParty ?? "").trim()) errs.fromParty = "From Party is required.";
     if (!String(row.toParty ?? "").trim()) errs.toParty = "To Party is required.";
     if (!String(row.destination ?? "").trim()) errs.destination = "Destination is required.";
@@ -349,17 +349,7 @@ export function DataTable<TData, TValue>({
   // New row helpers
   // ─────────────────────────────────────────────
 
-  /**
-   * Pure helper — computes the next challan number from a committed data snapshot.
-   * Uses only saved (non-isNew) rows so a freshly saved row is included.
-   */
-  const getNextChallan = React.useCallback((d: any[]): string => {
-    const nums = d
-      .filter((r) => !r.isNew)
-      .map((r) => Number(r.challanNo))
-      .filter((v) => !isNaN(v) && v > 0);
-    return nums.length ? String(Math.max(...nums) + 1) : "1001";
-  }, []);
+
 
   /**
    * Pure factory — builds a completely clean new row object.
@@ -384,10 +374,16 @@ export function DataTable<TData, TValue>({
   }), [useBatchDefaults, batchDefaults]);
 
   /**
-   * addEmptyRow — used by the standalone "Add Courier" button.
-   * Computes challan inside the setData functional update so it always
-   * reads the latest committed state, not a stale closure.
+   * Pure helper — computes the next challan number from a locally available snapshot for UI prediction.
    */
+  const getNextChallan = React.useCallback((d: any[]): string => {
+    const nums = d
+      .filter((r) => !r.isNew && String(r.challanNo).toLowerCase() !== "auto")
+      .map((r) => Number(r.challanNo))
+      .filter((v) => !isNaN(v) && v > 0);
+    return nums.length ? String(Math.max(...nums) + 1) : "1001";
+  }, []);
+
   const addEmptyRow = React.useCallback((): string | undefined => {
     // Read errors from ref to avoid stale deps
     const hasErrors = Object.values(errorsRef.current).some((e) => Object.keys(e).length > 0);
@@ -404,7 +400,7 @@ export function DataTable<TData, TValue>({
     const tempId = `new-${Date.now()}-${Math.random()}`;
 
     setData((committed) => {
-      // Challan calculated from the fully committed state — no stale refs
+      // Predict challan for visual UI feedback only. Backend enforces actual value later.
       const nextChallan = getNextChallan(committed);
       const newRow = {
         ...createCleanRow(nextChallan),
@@ -414,7 +410,6 @@ export function DataTable<TData, TValue>({
     });
 
     return tempId;
-    // createCleanRow/getNextChallan are pure fns that capture batchDefaults
   }, [createCleanRow, getNextChallan]);
 
   // ─────────────────────────────────────────────

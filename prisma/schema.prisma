@@ -66,7 +66,7 @@ model CourierEntry {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   srNo        Int?     // Auto-generated conceptually or tracked 
   date        DateTime @default(now())
-  challanNo   String
+  challanNo   Int
   fromParty   String
   toParty     String
   weight      String

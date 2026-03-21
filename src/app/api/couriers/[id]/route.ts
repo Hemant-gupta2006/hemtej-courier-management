@@ -27,23 +27,26 @@ export async function PATCH(
     }
 
     // Check if challan number is being changed to an existing one
-    if (body.challanNo) {
-      const existing = await prisma.courierEntry.findFirst({
-        where: { 
-          challanNo: String(body.challanNo),
-          userId: (session.user as any).id as string
-        }
-      });
+    if (body.challanNo !== undefined) {
+      const parsedChallan = parseInt(body.challanNo, 10);
+      if (!isNaN(parsedChallan)) {
+        const existing = await prisma.courierEntry.findFirst({
+          where: { 
+            challanNo: parsedChallan,
+            userId: (session.user as any).id as string
+          }
+        });
 
-      if (existing && existing.id !== resolvedParams.id) {
-        return new NextResponse("Challan Number already exists", { status: 400 });
+        if (existing && existing.id !== resolvedParams.id) {
+          return new NextResponse("Challan Number already exists", { status: 400 });
+        }
       }
     }
 
     const data: any = { ...body };
     if (data.amount !== undefined) data.amount = Number(data.amount);
     if (data.weight) data.weight = String(data.weight);
-    if (data.challanNo) data.challanNo = String(data.challanNo);
+    if (data.challanNo !== undefined) data.challanNo = parseInt(data.challanNo, 10);
     if (data.date) data.date = new Date(data.date);
     // Strip frontend-only fields that don't exist in DB
     delete data.id;
