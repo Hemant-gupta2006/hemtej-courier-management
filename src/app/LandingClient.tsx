@@ -28,11 +28,9 @@ const FloatingNavbar = ({ hasSession }: { hasSession: boolean }) => {
     >
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between px-6 py-3 rounded-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-sm">
-          <Link href="#" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-              <img src="/favicon.ico" alt="HemTej Co Logo" className="w-5 h-5 object-contain" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
+          <Link href="#" className="flex items-center gap-3 group">
+            <img src="/icon.png" alt="HemTej Co Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
+            <span className="font-bold text-lg md:text-xl tracking-tight text-slate-900 dark:text-white transition-colors duration-300">
               HemTej Co
             </span>
           </Link>
@@ -328,8 +326,8 @@ export default function LandingClient({ hasSession }: { hasSession: boolean }) {
       {/* Footer */}
       <footer id="contact" className="border-t border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0a0a0a] py-12 px-4">
         <div className="container mx-auto max-w-6xl flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <img src="/favicon.ico" alt="HemTej Co Logo" className="w-6 h-6 object-contain grayscale opacity-80" />
+          <div className="flex items-center gap-3 group cursor-pointer">
+            <img src="/icon.png" alt="HemTej Co Logo" className="w-8 h-8 object-contain grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300 group-hover:scale-110" />
             <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">HemTej Co</span>
           </div>
           <p className="text-slate-500 dark:text-slate-500 text-sm">

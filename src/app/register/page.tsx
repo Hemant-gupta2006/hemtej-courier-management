@@ -60,9 +60,9 @@ export default function RegisterPage() {
           <div className="flex flex-col items-center mb-8 space-y-4">
             <motion.div 
               whileHover={{ scale: 1.05 }}
-              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden"
+              className="group flex flex-col items-center justify-center mb-2 drop-shadow-md"
             >
-              <img src="/favicon.ico" alt="HemTej Co Logo" className="w-10 h-10 object-contain" />
+              <img src="/icon.png" alt="HemTej Co Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform duration-300 group-hover:scale-110" />
             </motion.div>
             <div className="text-center space-y-1">
               <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400">

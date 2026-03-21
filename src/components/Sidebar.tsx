@@ -60,9 +60,7 @@ export const Sidebar = () => {
     <div className="space-y-4 py-8 flex flex-col h-full bg-transparent text-slate-800 dark:text-slate-100">
       <div className="px-6 flex-1">
         <Link href="/dashboard" className="flex items-center gap-3 mb-12 group pl-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-slate-800 shadow-lg group-hover:shadow-blue-500/50 transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700">
-            <img src="/favicon.ico" alt="HemTej Co Logo" className="w-6 h-6 object-contain" />
-          </div>
+          <img src="/icon.png" alt="HemTej Co Logo" className="w-12 h-12 object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-110" />
           <h1 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400">
             HemTej Co
           </h1>
