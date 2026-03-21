@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
     const body = await req.json();
-    const { date, challanNo, fromParty, toParty, weight, destination, amount, status, mode } = body;
+    const { date, fromParty, toParty, weight, destination, amount, status, mode } = body;
     const userId = (session.user as any).id;
 
     const MAX_RETRIES = 5;
@@ -36,19 +36,15 @@ export async function POST(req: Request) {
     while (attempts < MAX_RETRIES) {
       try {
         courier = await prisma.$transaction(async (tx) => {
-          let assignedChallan = 1001;
+          // Fetch the latest challanNo for the given userId
+          const lastEntry = await tx.courierEntry.findFirst({
+            where: { userId },
+            orderBy: { challanNo: "desc" },
+            select: { challanNo: true }
+          });
 
-          if (challanNo) {
-            assignedChallan = parseInt(challanNo, 10);
-            if (isNaN(assignedChallan)) assignedChallan = 1001;
-          } else {
-            // Atomic fetch of MAX challanNo
-            const maxChallanResult = await tx.courierEntry.aggregate({
-              where: { userId },
-              _max: { challanNo: true }
-            });
-            assignedChallan = Number(maxChallanResult._max.challanNo || 1000) + 1;
-          }
+          // Generate next challanNo
+          const nextChallanNo = lastEntry ? lastEntry.challanNo + 1 : 1001;
 
           // Atomic fetch of MAX srNo
           const maxSrNoResult = await tx.courierEntry.aggregate({
@@ -62,7 +58,7 @@ export async function POST(req: Request) {
               srNo: newSrNo,
               userId,
               date: new Date(date || new Date()),
-              challanNo: assignedChallan,
+              challanNo: nextChallanNo,
               fromParty,
               toParty,
               weight: String(weight || "100g"),
@@ -73,16 +69,12 @@ export async function POST(req: Request) {
             }
           });
         });
-        break; // Sucessfully created
+        
+        break; // Successfully created
       } catch (error: any) {
         // P2002 is Prisma's unique constraint violation error code
         if (error.code === 'P2002') {
-          // If the user manually provided a challan number and it collided, return 400 immediately
-          if (challanNo) {
-            return new NextResponse("Challan Number already exists", { status: 400 });
-          }
-
-          // If auto-generated, retry the transaction to get a new unique number
+          // Retry the transaction to get a new unique number
           attempts++;
           if (attempts === MAX_RETRIES) throw error;
           await new Promise(res => setTimeout(res, 50));
