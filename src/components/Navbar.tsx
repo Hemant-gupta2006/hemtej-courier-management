@@ -132,7 +132,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors shrink-0"
+          className="hidden md:flex text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors shrink-0"
           title={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
         >
           {isSidebarOpen ? (

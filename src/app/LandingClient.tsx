@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Package, ArrowRight, Activity, Globe, ShieldCheck, CheckCircle2, LayoutDashboard, Zap, TableProperties } from "lucide-react";
+import { 
+  Package, ArrowRight, LayoutDashboard, Zap, TableProperties, 
+  Lock, Download, Keyboard, Wand2, Settings2, Gauge, MoonStar, Sparkles, Activity, Globe
+} from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEffect, useState } from "react";
@@ -24,22 +26,22 @@ const FloatingNavbar = ({ hasSession }: { hasSession: boolean }) => {
         scrolled ? "py-4" : "py-6"
       }`}
     >
-      <div className="container mx-auto px-4 max-w-5xl">
-        <div className="flex items-center justify-between px-6 py-3 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="flex items-center justify-between px-6 py-3 rounded-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 shadow-sm">
           <Link href="#" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-purple-600 shadow-md">
-              <Package className="h-5 w-5 text-white" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+              <img src="/favicon.ico" alt="HemTej Co Logo" className="w-5 h-5 object-contain" />
             </div>
-            <span className="font-bold text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400">
+            <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
               HemTej Co
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="#home" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Home</Link>
-            <Link href="#features" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</Link>
-            <Link href="#workflow" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Workflow</Link>
-            <Link href="#contact" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</Link>
+          <div className="hidden lg:flex items-center gap-8">
+            <Link href="#core-features" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Core</Link>
+            <Link href="#advanced-features" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Advanced</Link>
+            <Link href="#performance" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Performance</Link>
+            <Link href="#ui-ux" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Design</Link>
           </div>
 
           <div className="flex items-center gap-4">
@@ -49,13 +51,13 @@ const FloatingNavbar = ({ hasSession }: { hasSession: boolean }) => {
                 <Link href="/login">
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors hidden sm:block">Login</span>
                 </Link>
-                <Link href="/login" className="inline-flex items-center justify-center font-medium text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg rounded-xl h-10 px-6">
+                <Link href="/login" className="inline-flex items-center justify-center font-medium text-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-full h-10 px-6 transition-all shadow-sm">
                   Get Started
                 </Link>
               </>
             ) : (
-              <Link href="/dashboard" className="inline-flex items-center justify-center font-medium text-sm bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg rounded-xl h-10 px-6">
-                Go to Dashboard
+              <Link href="/dashboard" className="inline-flex items-center justify-center font-medium text-sm bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 rounded-full h-10 px-6 transition-all shadow-sm">
+                Dashboard
               </Link>
             )}
           </div>
@@ -66,226 +68,255 @@ const FloatingNavbar = ({ hasSession }: { hasSession: boolean }) => {
 };
 
 export default function LandingClient({ hasSession }: { hasSession: boolean }) {
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0f1c] selection:bg-blue-500/30 font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] selection:bg-blue-500/30 font-sans text-slate-900 dark:text-slate-50">
       <FloatingNavbar hasSession={hasSession} />
 
-      {/* Hero Section */}
-      <section id="home" className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        {/* Animated Background Gradients */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-pulse duration-10000" />
-        <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-pulse duration-7000 delay-1000" />
+      {/* 1. Hero Section */}
+      <section id="home" className="relative pt-40 pb-20 md:pt-56 md:pb-32 overflow-hidden px-4">
+        <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent dark:from-blue-900/10 pointer-events-none" />
         
-        <div className="container mx-auto px-4 max-w-6xl relative z-10">
+        <div className="container mx-auto max-w-5xl relative z-10">
           <div className="flex flex-col items-center text-center space-y-8">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center px-4 py-2 rounded-full border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium"
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center px-4 py-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm text-sm font-medium text-slate-600 dark:text-slate-300"
             >
-              <Zap className="w-4 h-4 mr-2" />
-              The Next Generation Logistics Platform
+              <Zap className="w-4 h-4 mr-2 text-blue-500" />
+              The Modern Logistics Platform
             </motion.div>
 
             <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white max-w-4xl"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.1]"
             >
-              Courier Management System
-              <br className="hidden md:block" />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600"> 
+              Courier Management.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-500 dark:from-white dark:to-slate-400">
                 Made Exceptionally Fast.
               </span>
             </motion.h1>
 
             <motion.p 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed"
             >
-              Manage and export courier entries easily. Designed for high volume workflows with spreadsheet-like data entry, real-time analytics, and secure cloud storage.
+              Streamline your high-volume workflows with spreadsheet-like data entry, real-time analytics, and secure cloud storage. Built for speed and reliability.
             </motion.p>
 
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 pt-4"
             >
-              <Link href={hasSession ? "/dashboard" : "/login"} className="inline-flex items-center justify-center font-medium h-14 px-8 text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl shadow-blue-500/25 rounded-xl transition-all hover:scale-105">
-                {hasSession ? "Enter Dashboard" : "Get Started"} <ArrowRight className="ml-2 h-5 w-5" />
+              <Link href={hasSession ? "/dashboard" : "/login"} className="inline-flex items-center justify-center font-medium h-14 px-8 text-base bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg rounded-full transition-all hover:scale-105">
+                {hasSession ? "Enter Dashboard" : "Start For Free"} <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-            </motion.div>
-
-            {/* Dashboard Preview Graphic */}
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="w-full max-w-5xl mt-16 relative"
-            >
-              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent blur-3xl rounded-[32px]" />
-              <div className="relative rounded-[24px] border border-slate-200/50 dark:border-white/10 bg-white/40 dark:bg-[#111827]/60 backdrop-blur-2xl shadow-2xl overflow-hidden p-2">
-                <div className="h-[400px] md:h-[600px] w-full rounded-[16px] border border-slate-200/50 dark:border-white/5 bg-slate-50 dark:bg-[#0d1321] overflow-hidden flex flex-col">
-                  {/* Fake App header */}
-                  <div className="h-12 border-b border-slate-200 dark:border-white/5 flex items-center px-4 gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                      <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                    </div>
-                  </div>
-                  {/* Fake App body */}
-                  <div className="flex flex-1 p-6 gap-6">
-                    <div className="w-48 hidden md:flex flex-col gap-3">
-                      <div className="h-8 rounded-md bg-blue-100 dark:bg-blue-900/30 w-full" />
-                      <div className="h-8 rounded-md bg-slate-200 dark:bg-white/5 w-full" />
-                      <div className="h-8 rounded-md bg-slate-200 dark:bg-white/5 w-full" />
-                    </div>
-                    <div className="flex-1 flex flex-col gap-4">
-                      <div className="flex gap-4">
-                        <div className="h-24 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 flex-1 shadow-sm" />
-                        <div className="h-24 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 flex-1 shadow-sm" />
-                        <div className="h-24 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 flex-1 shadow-sm" />
-                      </div>
-                      <div className="flex-1 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 shadow-sm p-4">
-                         <div className="h-6 w-32 bg-slate-200 dark:bg-white/10 rounded mb-4" />
-                         <div className="space-y-2">
-                            {[...Array(5)].map((_, i) => (
-                              <div key={i} className="h-10 bg-slate-100 dark:bg-white/5 rounded w-full" />
-                            ))}
-                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 bg-white dark:bg-[#0d1321] relative">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">Premium Features</h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Everything you need to run your logistics operations efficiently, packaged in a beautiful interface.</p>
+      {/* 2. Trust Indicators */}
+      <section className="py-10 border-y border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/20">
+        <div className="container mx-auto px-4 max-w-5xl text-center">
+          <p className="text-sm font-medium text-slate-400 dark:text-slate-500 mb-6 tracking-wide uppercase">
+            Powering thousands of shipments daily for modern logistics teams
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale">
+            {/* Dummy Logos */}
+            <div className="flex items-center gap-2 font-bold text-xl"><Package className="w-6 h-6"/> ShipFast</div>
+            <div className="flex items-center gap-2 font-bold text-xl"><Globe className="w-6 h-6"/> GlobalLog</div>
+            <div className="flex items-center gap-2 font-bold text-xl"><Zap className="w-6 h-6"/> ExpressWay</div>
+            <div className="flex items-center gap-2 font-bold text-xl"><Activity className="w-6 h-6"/> FlowTrack</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Core Features */}
+      <section id="core-features" className="py-24 md:py-32 px-4 relative">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Everything you need to run your operations</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">A complete toolkit designed to handle your courier lifecycle from entry to export securely.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: <TableProperties className="h-6 w-6 text-blue-500" />,
-                title: "Spreadsheet Data Entry",
-                desc: "150+ rows per day without touching your mouse. Features inline editing, auto-increment, and smart autocomplete."
+                title: "Shipment Data Entry",
+                desc: "Record Date, Challan, Sender, Receiver, Weight, Amount, and Status with precision."
               },
               {
                 icon: <LayoutDashboard className="h-6 w-6 text-purple-500" />,
-                title: "Modern Dashboard",
-                desc: "Gain insights with our visually stunning admin dashboard containing floating cards and glowing hover effects."
+                title: "Dashboard Overview",
+                desc: "Track total shipments, cash vs. account revenues, and monitor your recent ledger."
               },
               {
-                icon: <ShieldCheck className="h-6 w-6 text-emerald-500" />,
-                title: "Secure & Reliable",
-                desc: "Backed by enterprise-grade security and a deeply reliable SQLite database powered by Prisma."
+                icon: <Download className="h-6 w-6 text-emerald-500" />,
+                title: "Excel Data Export",
+                desc: "Generate robust .xlsx spreadsheets of your ledger data instantly for accounting."
+              },
+              {
+                icon: <Lock className="h-6 w-6 text-orange-500" />,
+                title: "Secure Authentication",
+                desc: "Enterprise-grade email and password authentication ensuring your ledger data remains private."
               }
             ].map((feature, idx) => (
-              <motion.div
-                key={idx}
-                whileHover={{ y: -5 }}
-                className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/10 shadow-sm border border-slate-100 dark:border-white/5 flex items-center justify-center mb-6">
+              <div key={idx} className="p-8 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">{feature.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
-              </motion.div>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Workflow Section */}
-      <section id="workflow" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-blue-50 dark:bg-[#0f172a]" />
-        <div className="container mx-auto px-4 max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-16">
-            <div className="flex-1 space-y-8">
-              <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white">
-                Lightning fast bulk operations.
-              </h2>
-              <ul className="space-y-6">
-                {[
-                  "Copy columns directly from Excel and paste into the grid.",
-                  "Set default batch settings to apply to every new row.",
-                  "Smart autocomplete remembers past entries.",
-                  "Export filtered records to robust .xlsx files."
-                ].map((item, idx) => (
-                  <motion.li 
-                    key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-center gap-4 text-slate-700 dark:text-slate-300"
-                  >
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                      <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="text-lg">{item}</span>
-                  </motion.li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex-1 w-full">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-blue-500/20 blur-3xl rounded-full" />
-                <div className="relative rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-8 shadow-2xl">
-                   <div className="space-y-4">
-                     <div className="h-6 w-1/3 bg-slate-200 dark:bg-slate-700/50 rounded-md" />
-                     <div className="h-4 w-full bg-slate-100 dark:bg-slate-800/50 rounded-md" />
-                     <div className="h-4 w-5/6 bg-slate-100 dark:bg-slate-800/50 rounded-md" />
-                     <div className="mt-8 grid grid-cols-2 gap-4">
-                       <div className="h-20 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30" />
-                       <div className="h-20 bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-900/30" />
-                     </div>
-                   </div>
+      {/* 4. Advanced Features */}
+      <section id="advanced-features" className="py-24 md:py-32 px-4 bg-slate-100 dark:bg-slate-900/50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="mb-16 md:w-2/3">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Advanced tools for power users</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">We stripped away the clutter and focused on reducing friction. Enter hundreds of records per day without ever touching your mouse.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="col-span-1 md:col-span-2 p-8 md:p-12 rounded-[32px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Keyboard className="w-32 h-32" />
+              </div>
+              <div className="relative z-10 w-full md:w-2/3">
+                <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-6">
+                  <Keyboard className="h-6 w-6 text-blue-500 dark:text-blue-400" />
                 </div>
+                <h3 className="text-2xl font-bold mb-4">Spreadsheet-Style Editing</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
+                  Navigate seamlessly with Arrow keys and Enter. Experience inline editing that feels exactly like your favorite spreadsheet software, but backed by a secure relational database.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-8">
+              <div className="flex-1 p-8 rounded-[32px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center mb-4">
+                  <Wand2 className="h-5 w-5 text-purple-500 dark:text-purple-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Smart Autocomplete</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  The system remembers past sender, receiver, and destination names, predicting your entries to save keystrokes.
+                </p>
+              </div>
+              <div className="flex-1 p-8 rounded-[32px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
+                  <Settings2 className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Batch Settings</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  Lock in common values (Date, Mode, Destination) so they automatically apply to every newly created row.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="container mx-auto px-4 max-w-4xl text-center relative z-10">
+      {/* 5 & 6. Performance and UI/UX */}
+      <section id="performance" className="py-24 md:py-32 px-4">
+        <div className="container mx-auto max-w-6xl">
+           <div className="grid md:grid-cols-2 gap-16 items-center">
+              <div className="space-y-8">
+                 <div>
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Built for uncompromising speed</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">Handle massive datasets without breaking a sweat. Our infrastructure is heavily optimized for rendering performance.</p>
+                 </div>
+                 
+                 <div className="flex items-start gap-4">
+                    <div className="mt-1 bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl">
+                       <Gauge className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-semibold mb-1">Virtualized DOM Rendering</h4>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                        Even with 1,000+ rows, the table only renders what is visible on your screen. Navigate your entire ledger with buttery smooth 60fps scrolling and zero lag.
+                      </p>
+                    </div>
+                 </div>
+
+                 <div className="flex items-start gap-4">
+                    <div className="mt-1 bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl">
+                       <MoonStar className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-semibold mb-1">Beautifully Pragmatic Design</h4>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                        Enjoy full dark mode support, non-intrusive toast notifications, and subtle micro-animations that make daily data entry a joy rather than a chore.
+                      </p>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Graphic Representation */}
+              <div className="relative">
+                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-purple-500/5 dark:from-blue-500/10 dark:to-purple-500/10 blur-3xl rounded-full" />
+                 <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[32px] p-2 shadow-xl">
+                    <div className="bg-slate-50 dark:bg-[#0a0f1c] rounded-[24px] overflow-hidden border border-slate-100 dark:border-slate-800/50">
+                       <div className="h-12 border-b border-slate-200 dark:border-slate-800 flex items-center px-4 gap-2">
+                         <div className="flex gap-1.5">
+                           <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                           <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                           <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                         </div>
+                       </div>
+                       <div className="p-4 space-y-3">
+                         {Array.from({ length: 6 }).map((_, i) => (
+                           <div key={i} className="flex gap-3 items-center opacity-70">
+                             <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                             <div className="h-8 w-1/3 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                             <div className="h-8 flex-1 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                             <div className="h-8 w-24 bg-blue-100 dark:bg-blue-900/30 rounded-md" />
+                           </div>
+                         ))}
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </section>
+
+      {/* 7. CTA Section */}
+      <section className="py-24 px-4 relative overflow-hidden">
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="rounded-[32px] bg-gradient-to-br from-blue-600 to-purple-700 p-12 md:p-20 shadow-2xl relative overflow-hidden"
+            className="rounded-[40px] bg-slate-900 dark:bg-slate-800 p-12 md:p-20 shadow-2xl relative overflow-hidden border border-slate-800 dark:border-slate-700"
           >
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+            {/* Subtle inner gradient */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px]" />
+            
             <div className="relative z-10 space-y-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                Ready to transform your workflow?
+              <Sparkles className="w-12 h-12 text-blue-400 mx-auto" />
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+                Ready to transform your<br />workflow?
               </h2>
-              <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto">
-                Join our platform today and experience the fastest spreadsheet-like courier management system.
+              <p className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed">
+                Join our platform today and experience the fastest, most reliable courier management system built for scale.
               </p>
-              <div className="inline-block pt-4">
-                <Link href={hasSession ? "/dashboard" : "/register"} className="inline-flex items-center justify-center font-medium h-14 px-8 text-base bg-white text-blue-700 hover:bg-slate-50 shadow-xl rounded-xl transition-all hover:scale-105">
+              <div className="pt-4">
+                <Link href={hasSession ? "/dashboard" : "/register"} className="inline-flex items-center justify-center font-medium h-14 px-8 text-base bg-white text-slate-900 hover:bg-slate-100 shadow-xl rounded-full transition-all hover:scale-105">
                   {hasSession ? "Go to Dashboard" : "Get Started For Free"}
                 </Link>
               </div>
@@ -295,19 +326,19 @@ export default function LandingClient({ hasSession }: { hasSession: boolean }) {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="border-t border-slate-200 dark:border-white/5 bg-white dark:bg-[#0a0f1c] py-12">
-        <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row justify-between items-center gap-6">
+      <footer id="contact" className="border-t border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0a0a0a] py-12 px-4">
+        <div className="container mx-auto max-w-6xl flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <img src="/favicon.ico" alt="HemTej Co Logo" className="w-6 h-6 object-contain grayscale opacity-80" />
             <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">HemTej Co</span>
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-slate-500 dark:text-slate-500 text-sm">
             © 2026 HemTej Co Inc. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 dark:hover:text-blue-400">Terms</Link>
-            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 dark:hover:text-blue-400">Privacy</Link>
-            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-blue-600 dark:hover:text-blue-400">Contact</Link>
+            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Terms</Link>
+            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Privacy</Link>
+            <Link href="#" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
