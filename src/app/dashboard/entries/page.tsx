@@ -189,8 +189,8 @@ export default function CourierEntryPage() {
           <div className="flex-shrink-0 flex justify-between items-center text-xs text-slate-400 dark:text-slate-500 mt-2">
             <span>
               {entries.length > 20
-                ? `Showing latest 20 of ${entries.length} entries for faster typing`
-                : `${entries.length} entries`}
+                ? `Showing latest loaded entries + newly added`
+                : `${entries.length} entries plus newly added`}
             </span>
             {entries.length > 20 && (
               <Button
