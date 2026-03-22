@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function GET() {
+export async function GET(req: Request) {
   let userId = "unknown";
   try {
     const session = await getServerSession(authOptions);
@@ -17,9 +17,14 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Too Many Requests" }, { status: 429 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const limitParam = searchParams.get("limit");
+    const take = limitParam ? parseInt(limitParam, 10) : undefined;
+
     const couriers = await prisma.courierEntry.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
+      ...(take ? { take } : {}),
     });
 
     return NextResponse.json({ success: true, data: couriers });

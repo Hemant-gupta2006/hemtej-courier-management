@@ -4,12 +4,12 @@ import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { MobileEntryForm } from "@/components/MobileEntryForm";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, startTransition, memo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { List, Trash2, Calendar } from "lucide-react";
+import { List, Trash2, Calendar, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -98,6 +98,7 @@ export default function CourierEntryPage() {
   const router = useRouter();
 
   const [entries, setEntries] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [autocompleteData, setAutocompleteData] = useState<{
     fromParties: string[];
     toParties: string[];
@@ -108,8 +109,9 @@ export default function CourierEntryPage() {
   const [defaultDateModalOpen, setDefaultDateModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     const [entRes, acRes] = await Promise.all([
-      fetch("/api/couriers"),
+      fetch("/api/couriers?limit=100"),
       fetch("/api/couriers/autocomplete"),
     ]);
     if (entRes.ok) {
@@ -120,6 +122,7 @@ export default function CourierEntryPage() {
       const json = await acRes.json();
       setAutocompleteData(json.data || json);
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -205,7 +208,13 @@ export default function CourierEntryPage() {
         {/* Mobile: card list + floating form */}
         {isMobile && (
           <div className="flex-1 overflow-y-auto space-y-3 pb-24 mt-4">
-            {entries.length === 0 ? (
+            {isLoading && entries.length === 0 ? (
+              <div className="flex flex-col gap-3 py-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse h-36 w-full" />
+                ))}
+              </div>
+            ) : entries.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-slate-400 text-sm gap-2">
                 <span className="text-4xl">📦</span>
                 <p className="font-medium text-base">No entries yet</p>
@@ -224,7 +233,14 @@ export default function CourierEntryPage() {
           <MobileEntryForm
             existingChallans={existingChallans}
             autocompleteData={autocompleteData}
-            onSaved={fetchData}
+            onSaved={(newEntry) => {
+              startTransition(() => {
+                setEntries(prev => {
+                  if (prev.some(e => e.id === newEntry.id)) return prev;
+                  return [newEntry, ...prev].slice(0, 100);
+                });
+              });
+            }}
             mobileDefaultDate={mobileDefaultDate}
           />
         )}
@@ -234,7 +250,7 @@ export default function CourierEntryPage() {
 }
 
 // ── Mobile entry card (read-only view of saved entries) ──
-function MobileEntryCard({ entry }: { entry: any }) {
+const MobileEntryCard = memo(function MobileEntryCard({ entry }: { entry: any }) {
   const statusColor: Record<string, string> = {
     Cash: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
     Account: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -296,4 +312,4 @@ function MobileEntryCard({ entry }: { entry: any }) {
       </div>
     </motion.div>
   );
-}
+});

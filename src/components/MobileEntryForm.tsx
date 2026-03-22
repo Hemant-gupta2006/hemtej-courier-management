@@ -177,7 +177,7 @@ export function MobileEntryForm({
 }: {
   existingChallans: string[];
   autocompleteData: { fromParties: string[]; toParties: string[]; destinations: string[] };
-  onSaved: () => void;
+  onSaved: (newEntry: any) => void;
   mobileDefaultDate?: string | null;
 }) {
   const [open, setOpen] = useState(false);
@@ -290,11 +290,12 @@ export function MobileEntryForm({
         }),
       });
       if (res.ok) {
+        const json = await res.json();
         toast.success("Entry saved!");
         setForm(defaultForm());
         setErrors({});
         setOpen(false);
-        onSaved();
+        onSaved(json.data);
       } else {
         toast.error((await res.text()) || "Failed to save");
       }
