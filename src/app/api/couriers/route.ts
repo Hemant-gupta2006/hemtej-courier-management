@@ -20,6 +20,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const limitParam = searchParams.get("limit");
     const pageParam = searchParams.get("page");
+    const searchParam = searchParams.get("search");
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+    const statusParam = searchParams.get("status");
     
     // Determine pagination parameters
     const take = limitParam ? parseInt(limitParam, 10) : undefined;
@@ -30,16 +34,46 @@ export async function GET(req: Request) {
       skip = (page - 1) * take;
     }
 
+    // Build unique where clause
+    const where: any = { userId };
+
+    if (startDateParam && endDateParam) {
+      where.date = {
+        gte: new Date(startDateParam),
+        lte: new Date(endDateParam + "T23:59:59.999Z")
+      };
+    } else if (startDateParam) {
+      where.date = { gte: new Date(startDateParam) };
+    } else if (endDateParam) {
+      where.date = { lte: new Date(endDateParam + "T23:59:59.999Z") };
+    }
+
+    if (statusParam && statusParam !== "all" && statusParam !== "") {
+      where.status = statusParam;
+    }
+
+    if (searchParam) {
+      const searchNum = parseInt(searchParam, 10);
+      where.OR = [
+        { fromParty: { contains: searchParam, mode: "insensitive" } },
+        { toParty: { contains: searchParam, mode: "insensitive" } },
+        { destination: { contains: searchParam, mode: "insensitive" } },
+      ];
+      if (!isNaN(searchNum)) {
+        where.OR.push({ challanNo: searchNum });
+      }
+    }
+
     // Execute queries concurrently
     const [couriers, total] = await Promise.all([
       prisma.courierEntry.findMany({
-        where: { userId },
+        where,
         orderBy: { createdAt: 'desc' },
         ...(take ? { take } : {}),
         ...(skip !== undefined ? { skip } : {}),
       }),
       prisma.courierEntry.count({
-        where: { userId }
+        where
       })
     ]);
 
@@ -49,7 +83,7 @@ export async function GET(req: Request) {
       success: true, 
       data: couriers,
       total,
-      page,
+      currentPage: page,
       totalPages
     });
   } catch (error: any) {
@@ -58,7 +92,7 @@ export async function GET(req: Request) {
     } else {
       console.error("[COURIERS_GET]", userId, error);
     }
-    return NextResponse.json({ success: false, data: [], error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ success: false, data: [], error: String(error?.message || error) }, { status: 500 });
   }
 }
 

@@ -16,10 +16,71 @@ export default function AllEntriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 50;
 
+  const [searchValue, setSearchValue] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [appliedFilters, setAppliedFilters] = useState({
+    search: "",
+    startDate: "",
+    endDate: "",
+    status: "all"
+  });
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      search: searchValue,
+      startDate,
+      endDate,
+      status: statusFilter
+    });
+    setPage(1);
+  };
+
+  const handleApplyStatusFilter = (status: string) => {
+    setStatusFilter(status);
+    setAppliedFilters({
+      search: searchValue,
+      startDate,
+      endDate,
+      status: status
+    });
+    setPage(1);
+  };
+
+  const handleClearDate = () => {
+    setStartDate("");
+    setEndDate("");
+    setAppliedFilters(prev => ({ ...prev, startDate: "", endDate: "" }));
+    setPage(1);
+  };
+
+  const handleClearStatus = () => {
+    setStatusFilter("all");
+    setAppliedFilters(prev => ({ ...prev, status: "all" }));
+    setPage(1);
+  };
+
+  const handleClearAll = () => {
+    setSearchValue("");
+    setStartDate("");
+    setEndDate("");
+    setStatusFilter("all");
+    setAppliedFilters({ search: "", startDate: "", endDate: "", status: "all" });
+    setPage(1);
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/couriers?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+      if (appliedFilters.search) params.append("search", appliedFilters.search);
+      if (appliedFilters.startDate) params.append("startDate", appliedFilters.startDate);
+      if (appliedFilters.endDate) params.append("endDate", appliedFilters.endDate);
+      if (appliedFilters.status && appliedFilters.status !== "all") params.append("status", appliedFilters.status);
+
+      const res = await fetch(`/api/couriers?${params.toString()}`);
       if (res.ok) {
         const result = await res.json();
         if (Array.isArray(result)) {
@@ -34,14 +95,15 @@ export default function AllEntriesPage() {
           setTotalPages(result.totalPages || 1);
         }
       } else {
-        toast.error("Failed to load entries.");
+        const errDetails = await res.json().catch(() => null);
+        toast.error(errDetails?.error || "Failed to load entries.");
       }
     } catch {
       toast.error("Network error.");
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, appliedFilters]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -81,7 +143,38 @@ export default function AllEntriesPage() {
           <div className="flex-1 overflow-hidden mt-4">
             <div className="h-full overflow-auto will-change-transform">
               <div className="w-full overflow-x-auto pb-4">
-                <DataTable columns={columns} data={memoData} mode="all" />
+                <DataTable 
+                  columns={columns} 
+                  data={memoData} 
+                  mode="all"
+                  searchValue={searchValue}
+                  onSearchChange={setSearchValue}
+                  startDate={startDate}
+                  onStartDateChange={setStartDate}
+                  endDate={endDate}
+                  onEndDateChange={setEndDate}
+                  statusFilter={statusFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  onApplyFilters={handleApplyFilters}
+                  onApplyStatusFilter={handleApplyStatusFilter}
+                  appliedFilters={appliedFilters}
+                  onClearDate={handleClearDate}
+                  onClearStatus={handleClearStatus}
+                  onClearAll={handleClearAll}
+                  onExportExcel={() => {
+                    const params = new URLSearchParams();
+                    if (appliedFilters.search) params.append("search", appliedFilters.search);
+                    if (appliedFilters.startDate) params.append("startDate", appliedFilters.startDate);
+                    if (appliedFilters.endDate) params.append("endDate", appliedFilters.endDate);
+                    if (appliedFilters.status && appliedFilters.status !== "all") params.append("status", appliedFilters.status);
+                    const a = document.createElement("a");
+                    a.href = `/api/couriers/export?${params.toString()}`;
+                    a.download = "Couriers_Filtered_Export.xlsx";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }}
+                />
               </div>
             </div>
           </div>

@@ -23,7 +23,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Download, Settings2, RefreshCw, Save } from "lucide-react";
+import { PlusCircle, Download, Settings2, RefreshCw, Save, X, Search, Filter, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
@@ -51,6 +51,21 @@ interface DataTableProps<TData, TValue> {
    * Default: "entry"
    */
   mode?: "entry" | "all";
+  searchValue?: string;
+  onSearchChange?: (val: string) => void;
+  startDate?: string;
+  onStartDateChange?: (val: string) => void;
+  endDate?: string;
+  onEndDateChange?: (val: string) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (val: string) => void;
+  onApplyFilters?: () => void;
+  onApplyStatusFilter?: (status: string) => void;
+  appliedFilters?: { search: string; startDate: string; endDate: string; status: string };
+  onClearDate?: () => void;
+  onClearStatus?: () => void;
+  onClearAll?: () => void;
+  onExportExcel?: () => void;
 }
 
 type ValidationErrors = Record<string, Record<string, string>>;
@@ -116,13 +131,27 @@ export function DataTable<TData, TValue>({
   virtualize = false,
   tableHeight = "560px",
   mode = "entry",
+  searchValue = "",
+  onSearchChange,
+  startDate = "",
+  onStartDateChange,
+  endDate = "",
+  onEndDateChange,
+  statusFilter = "all",
+  onStatusFilterChange,
+  onApplyFilters,
+  onApplyStatusFilter,
+  appliedFilters,
+  onClearDate,
+  onClearStatus,
+  onClearAll,
+  onExportExcel,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   // Ref for the virtualised scroll container (also used in non-virtual mode, harmlessly)
   const parentRef = React.useRef<HTMLDivElement>(null);
   const [data, setData] = React.useState<any[]>(initialData);
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "srNo", desc: true }]);
-  const [globalFilter, setGlobalFilter] = React.useState("");
   const [autocompleteData, setAutocompleteData] = React.useState<any>({});
   const [errors, setErrors] = React.useState<ValidationErrors>({});
   // Stable ref so tableMeta never rebuilds when errors change
@@ -632,8 +661,19 @@ export function DataTable<TData, TValue>({
       clearFieldError,
       saveNewRow,
       saveEditedRow,
+      mode,
+      filterProps: {
+        startDate: startDate || "",
+        onStartDateChange: onStartDateChange || (() => {}),
+        endDate: endDate || "",
+        onEndDateChange: onEndDateChange || (() => {}),
+        statusFilter: statusFilter || "all",
+        onStatusFilterChange: onStatusFilterChange || (() => {}),
+        onApplyFilters: onApplyFilters || (() => {}),
+        onApplyStatusFilter: onApplyStatusFilter || (() => {}),
+      }
     }),
-    [updateData, deleteRow, autocompleteData, handleCellKeyDown, clearFieldError, saveNewRow, saveEditedRow]
+    [updateData, deleteRow, autocompleteData, handleCellKeyDown, clearFieldError, saveNewRow, saveEditedRow, mode, startDate, onStartDateChange, endDate, onEndDateChange, statusFilter, onStatusFilterChange, onApplyFilters, onApplyStatusFilter]
   );
 
   const table = useReactTable({
@@ -647,10 +687,7 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: "includesString",
-    getFilteredRowModel: getFilteredRowModel(),
-    state: { sorting, globalFilter },
+    state: { sorting },
     meta: tableMeta,
   });
 
@@ -832,38 +869,83 @@ export function DataTable<TData, TValue>({
       )}
 
       {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <Input
-          placeholder="Global search (Challan, Party, Destination)..."
-          value={globalFilter ?? ""}
-          onChange={(e) => setGlobalFilter(String(e.target.value))}
-          className="max-w-sm bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 rounded-none"
-        />
-        <div className="flex gap-2">
-          <Button
-            onClick={exportExcel}
-            variant="outline"
-            className="rounded-none bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-800"
-          >
-            <Download className="mr-2 h-4 w-4" /> Export Excel
-          </Button>
-          {mode !== "all" && (
+      <div className="flex flex-col gap-3 mb-5">
+        {mode === "all" && (
+          <>
+            <div className="flex flex-col sm:flex-row gap-2 w-full items-center">
+              {/* Search */}
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <Input
+                  placeholder="Search challan, party, destination…"
+                  value={searchValue}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") onApplyFilters?.(); }}
+                  className="pl-9 h-10 bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-xl text-sm placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-blue-500 shadow-sm"
+                />
+              </div>
+
+              {/* Export — pushed to far right */}
+              <Button
+                onClick={onExportExcel || exportExcel}
+                variant="outline"
+                className="ml-auto h-10 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm flex-shrink-0"
+              >
+                <Download className="mr-2 h-4 w-4" /> Export Excel
+              </Button>
+            </div>
+
+            {/* Active Filter Chips */}
+            {appliedFilters && ((appliedFilters.startDate && appliedFilters.endDate) || (appliedFilters.status && appliedFilters.status !== "all")) && (
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                {appliedFilters.startDate && appliedFilters.endDate && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-full text-xs font-medium">
+                    Date: {appliedFilters.startDate} – {appliedFilters.endDate}
+                    <button onClick={onClearDate} className="hover:bg-blue-500/20 rounded-full p-0.5 transition-colors"><X className="w-3 h-3" /></button>
+                  </div>
+                )}
+                {appliedFilters.status && appliedFilters.status !== "all" && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 rounded-full text-xs font-medium">
+                    Status: {appliedFilters.status}
+                    <button onClick={onClearStatus} className="hover:bg-purple-500/20 rounded-full p-0.5 transition-colors"><X className="w-3 h-3" /></button>
+                  </div>
+                )}
+                <button 
+                  onClick={onClearAll} 
+                  className="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors ml-1"
+                >
+                  Clear All
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Entry mode: just Add Courier + Export */}
+        {mode !== "all" && (
+          <div className="flex gap-2 items-center justify-end">
+            <Button
+              onClick={onExportExcel || exportExcel}
+              variant="outline"
+              className="h-9 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm"
+            >
+              <Download className="mr-2 h-4 w-4" /> Export Excel
+            </Button>
             <Button
               onClick={async () => {
                 const tempId = await addEmptyRow();
                 if (tempId) {
-                  // Focus the fromParty field of the new row after DOM settles
                   setTimeout(() => {
                     document.getElementById(`cell-${tempId}-fromParty`)?.focus();
                   }, 50);
                 }
               }}
-              className="rounded-none bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg text-white"
+              className="h-9 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/25 text-white font-semibold"
             >
               <PlusCircle className="mr-2 h-4 w-4" /> Add Courier
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Table */}

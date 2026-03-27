@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect, useRef } from "react";
 import { CourierEntry } from "@prisma/client";
-import { Trash2, Save } from "lucide-react";
+import { Trash2, Save, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
@@ -29,6 +30,17 @@ declare module "@tanstack/react-table" {
     ) => void;
     errorsRef?: React.MutableRefObject<Record<string, Record<string, string>>>;
     clearFieldError?: (identifier: string, columnId: string) => void;
+    mode?: "entry" | "all";
+    filterProps?: {
+      startDate: string;
+      onStartDateChange: (val: string) => void;
+      endDate: string;
+      onEndDateChange: (val: string) => void;
+      statusFilter: string;
+      onStatusFilterChange: (val: string) => void;
+      onApplyFilters: () => void;
+      onApplyStatusFilter: (status: string) => void;
+    };
   }
 }
 
@@ -339,7 +351,39 @@ export const columns: ColumnDef<CourierEntry>[] = [
   },
   {
     accessorKey: "date",
-    header: "Date",
+    header: ({ table }) => {
+      const meta = table.options.meta;
+      if (meta?.mode === "all" && meta?.filterProps) {
+        const filters = meta.filterProps;
+        return (
+          <div className="flex items-center gap-1">
+            Date
+            <Popover>
+              <PopoverTrigger className={`h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-slate-800 ${(filters.startDate && filters.endDate) ? 'text-blue-400' : 'text-slate-400'} hover:text-white transition-colors`}>
+                <Filter className="h-3 w-3" />
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3 bg-slate-900 border-white/10" align="start">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm text-white">Filter by Date</h4>
+                  <div className="grid gap-2">
+                    <div className="grid items-center gap-1">
+                      <label className="text-xs text-slate-400">Start Date</label>
+                      <Input type="date" value={filters.startDate} onChange={(e) => filters.onStartDateChange(e.target.value)} className="h-8 text-sm" />
+                    </div>
+                    <div className="grid items-center gap-1">
+                      <label className="text-xs text-slate-400">End Date</label>
+                      <Input type="date" value={filters.endDate} onChange={(e) => filters.onEndDateChange(e.target.value)} className="h-8 text-sm" />
+                    </div>
+                  </div>
+                  <Button onClick={() => { filters.onApplyFilters(); }} className="w-full h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white">Apply</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        );
+      }
+      return "Date";
+    },
     size: 130,
     cell: EditableCell
   },
@@ -381,7 +425,41 @@ export const columns: ColumnDef<CourierEntry>[] = [
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: ({ table }) => {
+      const meta = table.options.meta;
+      if (meta?.mode === "all" && meta?.filterProps) {
+        const filters = meta.filterProps;
+        return (
+          <div className="flex items-center gap-1">
+            Status
+            <Popover>
+              <PopoverTrigger className={`h-6 w-6 inline-flex items-center justify-center rounded-md hover:bg-slate-800 ${(filters.statusFilter && filters.statusFilter !== "all") ? 'text-purple-400' : 'text-slate-400'} hover:text-white transition-colors`}>
+                <Filter className="h-3 w-3" />
+              </PopoverTrigger>
+              <PopoverContent className="w-40 p-2 bg-slate-900 border-white/10" align="start">
+                <div className="flex flex-col gap-1">
+                  {["all", "Account", "Cash"].map(s => (
+                    <Button 
+                      key={s} 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`justify-start text-xs h-8 ${filters.statusFilter === s ? 'bg-purple-500/20 text-purple-400' : 'text-slate-300'} hover:bg-slate-800`}
+                      onClick={() => {
+                        const newStatus = (filters.statusFilter === s && s !== "all") ? "all" : s;
+                        filters.onApplyStatusFilter(newStatus);
+                      }}
+                    >
+                      {s === "all" ? "All Statuses" : s}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        );
+      }
+      return "Status";
+    },
     size: 85,
     cell: EditableCell
   },

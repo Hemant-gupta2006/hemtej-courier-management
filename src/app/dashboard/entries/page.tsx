@@ -110,8 +110,10 @@ export default function CourierEntryPage() {
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
+    const params = new URLSearchParams({ limit: "100" });
+
     const [entRes, acRes] = await Promise.all([
-      fetch("/api/couriers?limit=100"),
+      fetch(`/api/couriers?${params.toString()}`),
       fetch("/api/couriers/autocomplete"),
     ]);
     if (entRes.ok) {
@@ -178,7 +180,11 @@ export default function CourierEntryPage() {
           <div className="flex-1 overflow-hidden mt-4">
             <div className="h-full overflow-auto will-change-transform">
               <div className="w-full overflow-x-auto pb-4">
-                <DataTable columns={columns} data={visibleData} />
+                <DataTable 
+                  columns={columns} 
+                  data={visibleData} 
+                  onExportExcel={() => window.open(`/api/couriers/export`)}
+                />
               </div>
             </div>
           </div>
