@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
-import { PlusCircle, X, ChevronDown, Check, Save } from "lucide-react";
+import { PlusCircle, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,8 +32,9 @@ const capitalizeWords = (s: string) =>
     .trim()
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
-// ── Autocomplete input with dropdown ──
-function AutoInput({
+// ── Mobile-only: Excel-style inline suggestion input ──
+// No dropdowns, portals, or overlays — suggestion appears as faded ghost text.
+function MobileAutoInput({
   id,
   label,
   value,
@@ -41,7 +42,7 @@ function AutoInput({
   suggestions,
   error,
   placeholder,
-  onKeyDown,
+  onKeyDown: externalKeyDown,
 }: {
   id: string;
   label: string;
@@ -52,82 +53,96 @@ function AutoInput({
   placeholder?: string;
   onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>;
 }) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value);
-  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Keep local in sync when value changes externally
-  useEffect(() => setQuery(value), [value]);
+  // Compute the first suggestion that starts with the typed value (case-insensitive)
+  const suggestion = useMemo(() => {
+    if (!value.trim()) return "";
+    const lower = value.toLowerCase();
+    return suggestions.find((s) => s.toLowerCase().startsWith(lower)) ?? "";
+  }, [value, suggestions]);
 
-  const filtered = query.length > 0
-    ? suggestions.filter((s) => s.toLowerCase().includes(query.toLowerCase())).slice(0, 8)
-    : suggestions.slice(0, 8);
+  // The ghost suffix: the part of the suggestion that hasn't been typed yet
+  const ghostSuffix = useMemo(() => {
+    if (!suggestion || suggestion.toLowerCase() === value.toLowerCase()) return "";
+    return suggestion.slice(value.length);
+  }, [suggestion, value]);
 
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const acceptSuggestion = () => {
+    if (suggestion) {
+      onChange(suggestion);
+    }
+  };
 
-  const select = (item: string) => {
-    setQuery(item);
-    onChange(item);
-    setOpen(false);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.key === "Tab" || e.key === "Enter") && ghostSuffix) {
+      e.preventDefault();
+      acceptSuggestion();
+      // After accepting, defer focus to next field if Enter was pressed
+      if (e.key === "Enter" && externalKeyDown) {
+        // Let the external handler run first on next tick
+        setTimeout(() => {
+          const synth = new KeyboardEvent("keydown", { key: "Enter", bubbles: true });
+          // We just move focus manually via the parent's onKeyDown
+        }, 0);
+        // Call external with a synthetic-like ref
+        externalKeyDown(e);
+      }
+      return;
+    }
+    externalKeyDown?.(e);
+  };
+
+  const handleBlur = () => {
+    if (ghostSuffix) {
+      acceptSuggestion();
+    }
   };
 
   return (
-    <div className="space-y-1.5" ref={ref}>
+    <div className="space-y-1.5">
       <Label htmlFor={id} className="text-sm font-semibold text-slate-700 dark:text-slate-200">
         {label}
       </Label>
+      {/* Relative container for ghost overlay */}
       <div className="relative">
+        {/* Ghost suggestion layer — absolutely positioned behind the real input text */}
+        {ghostSuffix && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 flex items-center px-3 h-12 text-base rounded-xl overflow-hidden"
+            style={{ zIndex: 0 }}
+          >
+            {/* Invisible spacer matching typed text width so ghost aligns correctly */}
+            <span className="invisible whitespace-pre">{value}</span>
+            <span
+              className="whitespace-pre"
+              style={{ color: "var(--muted-foreground, #94a3b8)", opacity: 0.6 }}
+            >
+              {ghostSuffix}
+            </span>
+          </div>
+        )}
+
         <Input
+          ref={inputRef}
           id={id}
-          value={query}
+          value={value}
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="words"
+          spellCheck={false}
           placeholder={placeholder ?? `Enter ${label}`}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            onChange(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          onKeyDown={onKeyDown}
-          className={`h-12 text-base rounded-xl pr-10 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${error
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all relative z-10 bg-transparent ${
+            error
               ? "border-red-500 ring-1 ring-red-500 focus-visible:ring-red-500"
               : "border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500"
-            }`}
+          }`}
+          style={{ backgroundColor: "transparent" }}
         />
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-        <AnimatePresence>
-          {open && filtered.length > 0 && (
-            <motion.ul
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.12 }}
-              className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
-            >
-              {filtered.map((item) => (
-                <li
-                  key={item}
-                  onMouseDown={() => select(item)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                >
-                  <Check
-                    className={`h-4 w-4 text-blue-500 shrink-0 ${value === item ? "opacity-100" : "opacity-0"
-                      }`}
-                  />
-                  {item}
-                </li>
-              ))}
-            </motion.ul>
-          )}
-        </AnimatePresence>
       </div>
       {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
     </div>
@@ -155,10 +170,11 @@ function SegmentedSelect({
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${value === opt
+            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
+              value === opt
                 ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                 : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400"
-              }`}
+            }`}
           >
             {opt}
           </button>
@@ -186,10 +202,10 @@ export function MobileEntryForm({
   // Predict the next challan based on the most recent entry
   const getNextChallan = () => {
     if (!existingChallans || existingChallans.length === 0) return "1001";
-    
+
     // existingChallans is already sorted by newest first (descending createdAt)
     const lastCreatedChallan = parseInt(existingChallans[0], 10);
-      
+
     if (isNaN(lastCreatedChallan) || lastCreatedChallan <= 0) return "1001";
     return String(lastCreatedChallan + 1);
   };
@@ -220,13 +236,17 @@ export function MobileEntryForm({
   // Update background form if default date changes while closed
   useEffect(() => {
     if (!open) {
-      setForm(f => ({ ...f, date: mobileDefaultDate || new Date().toISOString().split("T")[0] }));
+      setForm((f) => ({ ...f, date: mobileDefaultDate || new Date().toISOString().split("T")[0] }));
     }
   }, [mobileDefaultDate, open]);
 
   const set = (key: keyof FormData, val: string) => {
     setForm((f) => ({ ...f, [key]: val }));
-    setErrors((e) => { const n = { ...e }; delete n[key as keyof Errors]; return n; });
+    setErrors((e) => {
+      const n = { ...e };
+      delete n[key as keyof Errors];
+      return n;
+    });
   };
 
   const validate = (): Errors => {
@@ -237,10 +257,8 @@ export function MobileEntryForm({
     if (!form.fromParty.trim()) e.fromParty = "From Party is required.";
     if (!form.toParty.trim()) e.toParty = "To Party is required.";
     if (!form.destination.trim()) e.destination = "Destination is required.";
-    if (form.weightNum && isNaN(Number(form.weightNum)))
-      e.weight = "Weight must be a number.";
-    if (form.amount && isNaN(Number(form.amount)))
-      e.amount = "Amount must be a number.";
+    if (form.weightNum && isNaN(Number(form.weightNum))) e.weight = "Weight must be a number.";
+    if (form.amount && isNaN(Number(form.amount))) e.amount = "Amount must be a number.";
     return e;
   };
 
@@ -257,7 +275,10 @@ export function MobileEntryForm({
 
   const handleSave = async () => {
     const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
 
     // Trim + auto-capitalize text fields
     const cleaned = {
@@ -265,7 +286,7 @@ export function MobileEntryForm({
       fromParty: capitalizeWords(form.fromParty),
       toParty: capitalizeWords(form.toParty),
       destination: capitalizeWords(form.destination),
-      challanNo: form.challanNo.trim(), // Sent as a prediction, backend may assign a different one but usually matches
+      challanNo: form.challanNo.trim(),
     };
 
     // Build weight as grams string
@@ -357,11 +378,18 @@ export function MobileEntryForm({
               </div>
 
               {/* Scrollable form body */}
-              <div className="overflow-y-auto px-6 py-4 space-y-5" style={{ maxHeight: "calc(92dvh - 160px)" }}>
-
+              <div
+                className="overflow-y-auto px-6 py-4 space-y-5"
+                style={{ maxHeight: "calc(92dvh - 160px)" }}
+              >
                 {/* Date */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-date" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Date</Label>
+                  <Label
+                    htmlFor="m-date"
+                    className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                  >
+                    Date
+                  </Label>
                   <Input
                     id="m-date"
                     type="date"
@@ -374,7 +402,10 @@ export function MobileEntryForm({
 
                 {/* Challan No */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-challan" className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  <Label
+                    htmlFor="m-challan"
+                    className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                  >
                     Challan No (Predicted)
                   </Label>
                   <Input
@@ -383,14 +414,19 @@ export function MobileEntryForm({
                     onChange={(e) => set("challanNo", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "m-from")}
                     placeholder="e.g. 1042"
-                    className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.challanNo ? "border-red-500 ring-1 ring-red-500" : "border-slate-200 dark:border-slate-700"
-                      }`}
+                    className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
+                      errors.challanNo
+                        ? "border-red-500 ring-1 ring-red-500"
+                        : "border-slate-200 dark:border-slate-700"
+                    }`}
                   />
-                  {errors.challanNo && <p className="text-xs text-red-500 font-medium">{errors.challanNo}</p>}
+                  {errors.challanNo && (
+                    <p className="text-xs text-red-500 font-medium">{errors.challanNo}</p>
+                  )}
                 </div>
 
                 {/* From Party */}
-                <AutoInput
+                <MobileAutoInput
                   id="m-from"
                   label="From Party *"
                   value={form.fromParty}
@@ -402,7 +438,7 @@ export function MobileEntryForm({
                 />
 
                 {/* To Party */}
-                <AutoInput
+                <MobileAutoInput
                   id="m-to"
                   label="To Party *"
                   value={form.toParty}
@@ -415,7 +451,9 @@ export function MobileEntryForm({
 
                 {/* Weight */}
                 <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Weight</Label>
+                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    Weight
+                  </Label>
                   <div className="flex gap-2">
                     <Input
                       id="m-weight"
@@ -425,8 +463,11 @@ export function MobileEntryForm({
                       onChange={(e) => set("weightNum", e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, "m-dest")}
                       placeholder="100"
-                      className={`h-12 text-base rounded-xl flex-1 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.weight ? "border-red-500 ring-1 ring-red-500" : "border-slate-200 dark:border-slate-700"
-                        }`}
+                      className={`h-12 text-base rounded-xl flex-1 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
+                        errors.weight
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-slate-200 dark:border-slate-700"
+                      }`}
                     />
                     <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
                       {["g", "kg"].map((u) => (
@@ -434,21 +475,24 @@ export function MobileEntryForm({
                           key={u}
                           type="button"
                           onClick={() => set("weightUnit", u)}
-                          className={`px-5 h-12 text-sm font-semibold transition-colors ${form.weightUnit === u
+                          className={`px-5 h-12 text-sm font-semibold transition-colors ${
+                            form.weightUnit === u
                               ? "bg-blue-600 text-white"
                               : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                            }`}
+                          }`}
                         >
                           {u}
                         </button>
                       ))}
                     </div>
                   </div>
-                  {errors.weight && <p className="text-xs text-red-500 font-medium">{errors.weight}</p>}
+                  {errors.weight && (
+                    <p className="text-xs text-red-500 font-medium">{errors.weight}</p>
+                  )}
                 </div>
 
                 {/* Destination */}
-                <AutoInput
+                <MobileAutoInput
                   id="m-dest"
                   label="Destination *"
                   value={form.destination}
@@ -461,9 +505,16 @@ export function MobileEntryForm({
 
                 {/* Amount */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-amount" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Amount</Label>
+                  <Label
+                    htmlFor="m-amount"
+                    className="text-sm font-semibold text-slate-700 dark:text-slate-200"
+                  >
+                    Amount
+                  </Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base font-medium">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base font-medium">
+                      ₹
+                    </span>
                     <Input
                       id="m-amount"
                       type="text"
@@ -472,11 +523,16 @@ export function MobileEntryForm({
                       onChange={(e) => set("amount", e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, null)}
                       placeholder="0"
-                      className={`h-12 text-base rounded-xl pl-8 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.amount ? "border-red-500 ring-1 ring-red-500" : "border-slate-200 dark:border-slate-700"
-                        }`}
+                      className={`h-12 text-base rounded-xl pl-8 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
+                        errors.amount
+                          ? "border-red-500 ring-1 ring-red-500"
+                          : "border-slate-200 dark:border-slate-700"
+                      }`}
                     />
                   </div>
-                  {errors.amount && <p className="text-xs text-red-500 font-medium">{errors.amount}</p>}
+                  {errors.amount && (
+                    <p className="text-xs text-red-500 font-medium">{errors.amount}</p>
+                  )}
                 </div>
 
                 {/* Status */}
