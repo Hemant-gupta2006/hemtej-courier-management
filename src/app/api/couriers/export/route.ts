@@ -57,19 +57,19 @@ export async function GET(req: Request) {
     const formatExportWeight = (weightStr: string | null) => {
       if (!weightStr) return "";
       const lower = String(weightStr).toLowerCase().trim();
-      
+
       if (lower.includes("kg")) {
         const num = parseFloat(lower);
         return !isNaN(num) ? `${num} kg` : lower.replace(/\s+/g, "");
       }
-      
+
       const g = parseFloat(lower);
       if (isNaN(g)) return lower;
-      
+
       if (g >= 1000) {
         return `${Number((g / 1000).toFixed(3))} kg`;
       }
-      
+
       // Reverted logic for grams to original format
       return `${(g / 1000).toFixed(3)}gm`;
     };
@@ -83,7 +83,8 @@ export async function GET(req: Request) {
       "Weight": formatExportWeight(row.weight),
       "Destination": row.destination,
       "Amount": Number(row.amount) || 0,
-      "Status": row.status
+      "Status": row.status,
+      "Mode": row.mode
     }));
 
     if (tableData.length === 0) {
@@ -96,12 +97,13 @@ export async function GET(req: Request) {
         "Weight": "0",
         "Destination": "No data",
         "Amount": 0,
-        "Status": "No data"
+        "Status": "No data",
+        "Mode": "No data"
       });
     }
 
     const worksheet = XLSX.utils.json_to_sheet(tableData, { dateNF: "dd/mm/yyyy" });
-    
+
     // Auto-size columns logic
     const colWidths = Object.keys(tableData[0] || {}).map((key) => {
       const maxLength = Math.max(
@@ -114,12 +116,12 @@ export async function GET(req: Request) {
       );
       return { wch: maxLength + 2 }; // Add padding
     });
-    
+
     worksheet["!cols"] = colWidths;
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Couriers");
-    
+
     // Generate buffer
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
 
