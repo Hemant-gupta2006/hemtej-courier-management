@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion, AnimatePresence } from "framer-motion";
+import { clearAutocompleteCache } from "@/lib/autocomplete";
 
 type FormData = {
   date: string;
@@ -313,6 +314,7 @@ export function MobileEntryForm({
       if (res.ok) {
         const json = await res.json();
         toast.success("Entry saved!");
+        clearAutocompleteCache();
         setForm(defaultForm());
         setErrors({});
         setOpen(false);

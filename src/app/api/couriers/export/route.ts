@@ -80,8 +80,8 @@ export async function GET(req: Request) {
       "Challan No": row.challanNo,
       "From Party": row.fromParty,
       "To Party": row.toParty,
-      "Weight": formatExportWeight(row.weight),
       "Destination": row.destination,
+      "Weight": formatExportWeight(row.weight),
       "Amount": Number(row.amount) || 0,
       "Status": row.status,
       "Mode": row.mode
@@ -94,8 +94,8 @@ export async function GET(req: Request) {
         "Challan No": 0,
         "From Party": "No data",
         "To Party": "No data",
-        "Weight": "0",
         "Destination": "No data",
+        "Weight": "0",
         "Amount": 0,
         "Status": "No data",
         "Mode": "No data"

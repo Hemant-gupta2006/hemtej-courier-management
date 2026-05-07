@@ -8,13 +8,13 @@ import { authOptions } from "@/lib/auth";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session) return null; // Or redirect
-  
+
   const userId = (session.user as any).id;
 
   const totalEntries = await prisma.courierEntry.count({
     where: { userId }
   });
-  
+
   const cashEntries = await prisma.courierEntry.aggregate({
     _sum: { amount: true },
     where: { status: "Cash", userId }
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto px-4 md:px-0 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Welcome Back! 👋</h2>
@@ -41,49 +41,49 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-           <Link href="/dashboard/entries" className="inline-flex items-center justify-center font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md rounded-xl h-10 px-4">
-               <Plus className="mr-2 h-4 w-4" /> Add Courier
-           </Link>
-           <Link href="/dashboard/reports" className="inline-flex items-center justify-center font-medium border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white rounded-xl h-10 px-4">
-               <FileText className="mr-2 h-4 w-4" /> View Reports
-           </Link>
+          <Link href="/dashboard/entries" className="inline-flex items-center justify-center font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md rounded-xl h-10 px-4">
+            <Plus className="mr-2 h-4 w-4" /> Add Courier
+          </Link>
+          <Link href="/dashboard/reports" className="inline-flex items-center justify-center font-medium border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white rounded-xl h-10 px-4">
+            <FileText className="mr-2 h-4 w-4" /> View Reports
+          </Link>
         </div>
       </div>
-      
+
       {/* Quick Action Cards */}
       <div className="grid gap-4 md:grid-cols-3 mb-8">
         <Link href="/dashboard/entries" className="group">
-           <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
-              <CardHeader>
-                 <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
-                   <Database className="mr-2 h-5 w-5 text-blue-500" /> Data Entry
-                 </CardTitle>
-                 <CardDescription>Enter multiple couriers quickly in spreadsheet mode</CardDescription>
-              </CardHeader>
-           </Card>
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
+                <Database className="mr-2 h-5 w-5 text-blue-500" /> Data Entry
+              </CardTitle>
+              <CardDescription>Enter multiple couriers quickly in spreadsheet mode</CardDescription>
+            </CardHeader>
+          </Card>
         </Link>
         <Link href="/dashboard/reports" className="group">
-           <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-              <CardHeader>
-                 <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
-                   <FileText className="mr-2 h-5 w-5 text-emerald-500" /> Reports
-                 </CardTitle>
-                 <CardDescription>View, filter, and export your courier history</CardDescription>
-              </CardHeader>
-           </Card>
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
+                <FileText className="mr-2 h-5 w-5 text-emerald-500" /> Reports
+              </CardTitle>
+              <CardDescription>View, filter, and export your courier history</CardDescription>
+            </CardHeader>
+          </Card>
         </Link>
         <Link href="/dashboard/settings" className="group">
-           <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 to-red-500" />
-              <CardHeader>
-                 <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
-                   <Settings2 className="mr-2 h-5 w-5 text-orange-500" /> Settings
-                 </CardTitle>
-                 <CardDescription>Manage preferences and your account</CardDescription>
-              </CardHeader>
-           </Card>
+          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border-white/40 dark:border-white/10 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden relative">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 to-red-500" />
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg text-slate-800 dark:text-white">
+                <Settings2 className="mr-2 h-5 w-5 text-orange-500" /> Settings
+              </CardTitle>
+              <CardDescription>Manage preferences and your account</CardDescription>
+            </CardHeader>
+          </Card>
         </Link>
       </div>
 
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted-foreground">Liftime tracked parcels</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Cash Collections</CardTitle>
@@ -110,7 +110,7 @@ export default async function DashboardPage() {
             <p className="text-xs text-muted-foreground">Total cash on delivery/booking</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Account Receivables</CardTitle>

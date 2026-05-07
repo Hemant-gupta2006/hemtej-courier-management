@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { getAutocompleteData, clearAutocompleteCache } from "@/lib/autocomplete";
 
 
 interface DataTableProps<TData, TValue> {
@@ -203,15 +204,8 @@ export function DataTable<TData, TValue>({
 
   React.useEffect(() => {
     const fetchAutocomplete = async () => {
-      try {
-        const res = await fetch("/api/couriers/autocomplete");
-        if (res.ok) {
-          const json = await res.json();
-          setAutocompleteData(json.data || json);
-        }
-      } catch (err) {
-        console.error("Failed to fetch autocomplete", err);
-      }
+      const data = await getAutocompleteData();
+      setAutocompleteData(data);
     };
     fetchAutocomplete();
   }, []);
@@ -537,6 +531,7 @@ export function DataTable<TData, TValue>({
 
           const jsonBody = await res.json();
           const saved = jsonBody.data || jsonBody;
+          clearAutocompleteCache();
 
           setData((committed) =>
             committed.map((r) => {
@@ -749,7 +744,7 @@ export function DataTable<TData, TValue>({
   // ─────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Batch Default Settings */}
       {mode !== "all" && (
         <div className="rounded-[20px] bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_0_rgba(31,38,135,0.05)] p-6">
@@ -877,29 +872,40 @@ export function DataTable<TData, TValue>({
       )}
 
       {/* Action Bar */}
-      <div className="flex flex-col gap-3 mb-5">
+      <div className="flex flex-col gap-3 mb-2">
         {mode === "all" && (
           <>
-            <div className="flex flex-col sm:flex-row gap-2 w-full items-center">
+            <div className="flex flex-row gap-2 w-full items-center">
               {/* Search */}
-              <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  onApplyFilters?.();
+                  if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                  }
+                }}
+                className="relative flex-1 min-w-0 max-w-sm"
+              >
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
-                  placeholder="Search challan, party, destination…"
+                  type="search"
+                  enterKeyHint="search"
+                  placeholder="Search..."
                   value={searchValue}
                   onChange={(e) => onSearchChange?.(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") onApplyFilters?.(); }}
                   className="pl-9 h-10 bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-xl text-sm placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-blue-500 shadow-sm"
                 />
-              </div>
+              </form>
 
               {/* Export — pushed to far right */}
               <Button
                 onClick={onExportExcel || exportExcel}
                 variant="outline"
-                className="ml-auto h-10 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm flex-shrink-0"
+                className="ml-auto h-10 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm flex-shrink-0 px-3 sm:px-4"
               >
-                <Download className="mr-2 h-4 w-4" /> Export Excel
+                <Download className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Export Excel</span>
               </Button>
             </div>
 
@@ -935,9 +941,10 @@ export function DataTable<TData, TValue>({
             <Button
               onClick={onExportExcel || exportExcel}
               variant="outline"
-              className="h-9 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm"
+              className="h-9 rounded-xl bg-white/10 dark:bg-slate-900/50 backdrop-blur-xl border border-white/20 dark:border-white/10 hover:bg-white/20 text-sm font-medium shadow-sm px-3 sm:px-4"
             >
-              <Download className="mr-2 h-4 w-4" /> Export Excel
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export Excel</span>
             </Button>
             <Button
               onClick={async () => {
@@ -1039,15 +1046,6 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="flex items-center justify-between py-4">
-        <div className="text-sm text-slate-500 dark:text-slate-400">
-          <strong>TAB</strong> — next field &nbsp;|&nbsp; <strong>ENTER on Save</strong> — save &amp; add row
-          &nbsp;|&nbsp; <strong>CTRL+S</strong> — save row
-        </div>
-        <div className="text-sm text-slate-500 dark:text-slate-400">
-          {table.getRowModel().rows.length} entries
-        </div>
-      </div>
     </div>
   );
 }

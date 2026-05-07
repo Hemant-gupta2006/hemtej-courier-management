@@ -116,7 +116,7 @@ export default function AllEntriesPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* FIXED HEADER */}
-      <div className="flex-shrink-0 space-y-4">
+      <div className="flex-shrink-0 space-y-1 px-3 py-2">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button
@@ -129,11 +129,6 @@ export default function AllEntriesPage() {
           </Button>
           <div>
             <h2 className="text-2xl font-bold tracking-tight">All Entries</h2>
-            <p className="text-sm text-muted-foreground">
-              {loading
-                ? "Loading…"
-                : `${entries.length.toLocaleString()} entries — fully editable, virtualised scrolling`}
-            </p>
           </div>
         </div>
       </div>
@@ -144,12 +139,12 @@ export default function AllEntriesPage() {
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-hidden mt-4">
+          <div className="flex-1 overflow-hidden mt-0">
             <div className="h-full overflow-auto will-change-transform">
-              <div className="w-full overflow-x-auto pb-4">
-                <DataTable 
-                  columns={columns} 
-                  data={memoData} 
+              <div className="w-full overflow-x-auto pb-0">
+                <DataTable
+                  columns={columns}
+                  data={memoData}
                   totalCount={totalCount}
                   pageIndex={page - 1}
                   pageSize={limit}
@@ -186,7 +181,7 @@ export default function AllEntriesPage() {
             </div>
           </div>
 
-          <div className="flex-shrink-0 flex justify-between items-center pt-4 pb-2 px-1">
+          <div className="flex-shrink-0 flex justify-between items-center py-1 px-1">
             <Button variant="outline" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
               Previous
             </Button>

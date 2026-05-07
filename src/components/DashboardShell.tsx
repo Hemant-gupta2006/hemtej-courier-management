@@ -10,7 +10,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen w-full relative z-10 p-2 gap-4 overflow-hidden">
+    <div className="flex h-screen w-full relative z-10 p-1 md:p-2 gap-2 md:gap-4 overflow-hidden">
 
       {/* ✅ DESKTOP SIDEBAR */}
       <AnimatePresence initial={false}>
@@ -65,7 +65,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           />
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
           {children}
         </div>
       </motion.main>

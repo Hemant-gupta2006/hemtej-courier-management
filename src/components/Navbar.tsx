@@ -125,7 +125,7 @@ export const Navbar = ({ onToggleSidebar, isSidebarOpen }: NavbarProps) => {
         onConfirm={handleDeleteAll}
         loading={deleteLoading}
       />
-      <div className="flex items-center p-4 md:px-6 border-b border-white/40 dark:border-white/5 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md gap-2">
+      <div className="flex items-center py-2 px-3 md:p-4 md:px-6 border-b border-white/40 dark:border-white/5 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md gap-2">
       {/* Sidebar toggle — visible on desktop */}
       {onToggleSidebar && (
         <Button

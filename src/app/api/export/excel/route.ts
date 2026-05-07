@@ -41,8 +41,8 @@ export async function GET(req: Request) {
       "Challan No": row.challanNo,
       "From Party": row.fromParty,
       "To Party": row.toParty,
-      "Weight": formatExportWeight(row.weight),
       "Destination": row.destination,
+      "Weight": formatExportWeight(row.weight),
       "Amount": Number(row.amount) || 0,
       "Status": row.status,
       "Mode": row.mode

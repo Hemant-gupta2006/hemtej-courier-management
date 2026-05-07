@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { List, Trash2, Calendar, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getAutocompleteData } from "@/lib/autocomplete";
 
 
 
@@ -113,19 +114,18 @@ export default function CourierEntryPage() {
     setIsLoading(true);
     const params = new URLSearchParams({ limit: "100" });
 
-    const [entRes, acRes] = await Promise.all([
+    const [entRes, acData] = await Promise.all([
       fetch(`/api/couriers?${params.toString()}`),
-      fetch("/api/couriers/autocomplete"),
+      getAutocompleteData(),
     ]);
+
     if (entRes.ok) {
       const json = await entRes.json();
       setEntries(Array.isArray(json) ? json : (json.data || []));
       setTotalCount(json.total || (Array.isArray(json) ? json.length : 0));
     }
-    if (acRes.ok) {
-      const json = await acRes.json();
-      setAutocompleteData(json.data || json);
-    }
+
+    setAutocompleteData(acData);
     setIsLoading(false);
   }, []);
 
@@ -159,7 +159,7 @@ export default function CourierEntryPage() {
 
       <div className="h-full flex flex-col overflow-hidden">
         {/* FIXED TOP AREA */}
-        <div className="flex-shrink-0 space-y-4">
+        <div className="flex-shrink-0 space-y-1">
           <div className="flex items-center justify-between flex-wrap gap-3">
 
 
@@ -181,10 +181,10 @@ export default function CourierEntryPage() {
         {!isMobile && (
           <div className="flex-1 overflow-hidden mt-4">
             <div className="h-full overflow-auto will-change-transform">
-              <div className="w-full overflow-x-auto pb-4">
-                <DataTable 
-                  columns={columns} 
-                  data={visibleData} 
+              <div className="w-full overflow-x-auto pb-0">
+                <DataTable
+                  columns={columns}
+                  data={visibleData}
                   totalCount={totalCount}
                   pageIndex={0}
                   pageSize={20}
@@ -195,26 +195,6 @@ export default function CourierEntryPage() {
           </div>
         )}
 
-        {/* Footer: subtle info + show-all link */}
-        {!isMobile && (
-          <div className="flex-shrink-0 flex justify-between items-center text-xs text-slate-400 dark:text-slate-500 mt-2">
-            <span>
-              {entries.length > 20
-                ? `Showing latest loaded entries + newly added`
-                : `${entries.length} entries plus newly added`}
-            </span>
-            {entries.length > 20 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/dashboard/all-entries")}
-                className="rounded-xl text-xs h-7 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400"
-              >
-                Show All Entries →
-              </Button>
-            )}
-          </div>
-        )}
 
         {/* Mobile: card list + floating form */}
         {isMobile && (
