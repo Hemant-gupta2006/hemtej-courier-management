@@ -320,9 +320,6 @@ export async function GET(req: Request) {
     setNote(3, `Cheque to be made in favour of M/S ${businessName.toUpperCase()}`);
 
     let currentNoteIndex = 4;
-    if (transportMode) setNote(currentNoteIndex++, `Transport Mode : ${transportMode}`);
-    if (placeOfSupply) setNote(currentNoteIndex++, `Place of Supply : ${placeOfSupply}`);
-    if (remarks) setNote(currentNoteIndex++, `Remarks : ${remarks}`);
 
     // Bank details
     worksheet.mergeCells(`A${currentRow}:B${currentRow}`);

@@ -28,9 +28,6 @@ export default function ReportsPage() {
     partyPincode: "",
     partyContact: "",
     partyGst: "",
-    placeOfSupply: "",
-    transportMode: "Surface",
-    remarks: "",
     businessName: "SEETARAM ENTERPRISE",
     businessAddress: "Shop no.04, Dave Chawl, Near Kamu, Baba, SV Road, Opp. Patker College, Goregaon West, Mumbai 400104",
     businessContact: "+91 9892796228",
@@ -352,39 +349,6 @@ export default function ReportsPage() {
                         </div>
                       </div>
 
-                      {/* Extra Fields */}
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-slate-400">Transport & Remarks</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Place of Supply</Label>
-                            <Input 
-                              placeholder="e.g. Maharashtra" 
-                              value={advancedDetails.placeOfSupply}
-                              onChange={(e) => setAdvancedDetails({...advancedDetails, placeOfSupply: e.target.value})}
-                              className="rounded-xl"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Transport Mode</Label>
-                            <Input 
-                              placeholder="Surface / Air" 
-                              value={advancedDetails.transportMode}
-                              onChange={(e) => setAdvancedDetails({...advancedDetails, transportMode: e.target.value})}
-                              className="rounded-xl"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Remarks / Notes</Label>
-                          <Input 
-                            placeholder="Add extra notes here" 
-                            value={advancedDetails.remarks}
-                            onChange={(e) => setAdvancedDetails({...advancedDetails, remarks: e.target.value})}
-                            className="rounded-xl"
-                          />
-                        </div>
-                      </div>
                     </div>
                   </div>
                   <DialogFooter className="p-6 pt-2 border-t dark:border-white/10">
