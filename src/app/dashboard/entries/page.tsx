@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { List, Trash2, Calendar, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAutocompleteData } from "@/lib/autocomplete";
+import { formatWeight } from "@/lib/utils";
 
 
 
@@ -247,10 +248,6 @@ const MobileEntryCard = memo(function MobileEntryCard({ entry }: { entry: any })
     Cash: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
   };
 
-  const fmt = (w: string) => {
-    const g = parseFloat(w);
-    return isNaN(g) ? w : g >= 1000 ? `${g / 1000}kg` : `${g}g`;
-  };
 
   return (
     <motion.div
@@ -287,7 +284,7 @@ const MobileEntryCard = memo(function MobileEntryCard({ entry }: { entry: any })
         </div>
         <div>
           <p className="text-xs text-slate-400">Weight</p>
-          <p className="font-medium text-slate-800 dark:text-slate-100">{fmt(entry.weight)}</p>
+          <p className="font-medium text-slate-800 dark:text-slate-100">{formatWeight(entry.weightValue, entry.weightUnit)}</p>
         </div>
       </div>
 

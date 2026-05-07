@@ -56,14 +56,26 @@ export async function PATCH(
     if (body.date !== undefined) data.date = isNaN(Date.parse(body.date)) ? new Date() : new Date(body.date);
     if (body.fromParty !== undefined) data.fromParty = String(body.fromParty).trim();
     if (body.toParty !== undefined) data.toParty = String(body.toParty).trim();
-    if (body.weight !== undefined) data.weight = String(body.weight).trim();
+    if (body.weightValue !== undefined) data.weightValue = Number(body.weightValue) || 0;
+    if (body.weightUnit !== undefined) data.weightUnit = String(body.weightUnit).trim();
+    if (body.weight !== undefined) {
+      // Fallback for old clients sending 'weight' string
+      const w = String(body.weight).toLowerCase().trim();
+      if (w.includes("kg")) {
+        data.weightValue = parseFloat(w) || 0;
+        data.weightUnit = "kg";
+      } else {
+        data.weightValue = parseFloat(w) || 0;
+        data.weightUnit = "gm";
+      }
+    }
     if (body.destination !== undefined) data.destination = String(body.destination).trim();
     if (body.amount !== undefined) data.amount = Number(body.amount) || 0;
     if (body.status !== undefined) data.status = String(body.status).trim();
     if (body.mode !== undefined) data.mode = String(body.mode).trim();
     if (body.challanNo !== undefined) {
-       const parsedChallan = parseInt(body.challanNo, 10);
-       if (!isNaN(parsedChallan)) data.challanNo = parsedChallan;
+      const parsedChallan = parseInt(body.challanNo, 10);
+      if (!isNaN(parsedChallan)) data.challanNo = parsedChallan;
     }
 
     const courier = await prisma.courierEntry.update({

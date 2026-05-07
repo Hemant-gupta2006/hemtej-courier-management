@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { formatWeight } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -176,7 +177,7 @@ export default async function DashboardPage() {
                       <div className="space-y-1">
                         <p className="text-sm font-medium leading-none">Challan #{entry.challanNo}</p>
                         <p className="text-sm text-muted-foreground">
-                          {entry.fromParty} &rarr; {entry.toParty} <span className="text-slate-400">({entry.weight})</span>
+                          {entry.fromParty} &rarr; {entry.toParty} <span className="text-slate-400">({formatWeight(entry.weightValue, entry.weightUnit)})</span>
                         </p>
                       </div>
                       <div className="ml-auto flex items-center gap-4">

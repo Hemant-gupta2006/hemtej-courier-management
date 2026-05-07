@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import ExcelJS from "exceljs";
+import { formatWeight } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -63,15 +64,6 @@ export async function GET(req: Request) {
       return new NextResponse("No billing entries found", { status: 404 });
     }
 
-    const formatWeight = (w: string) => {
-      const lower = w.toLowerCase().trim();
-      if (lower.endsWith("kg")) return w;
-      if (lower.endsWith("g")) {
-        const g = parseFloat(lower.replace("g", ""));
-        return g >= 1000 ? `${(g / 1000).toFixed(3)} kg` : `${g} g`;
-      }
-      return w;
-    };
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Account Billing", {
@@ -190,7 +182,7 @@ export async function GET(req: Request) {
         entry.date.toLocaleDateString('en-GB'),
         entry.challanNo,
         entry.destination,
-        formatWeight(entry.weight),
+        formatWeight(entry.weightValue, entry.weightUnit),
         entry.amount || 0
       ];
       row.eachCell((cell, colNumber) => {

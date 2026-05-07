@@ -56,7 +56,14 @@ export async function POST(req: Request) {
           challanNo: parsedChallan,
           fromParty: String(item.fromParty || "").trim(),
           toParty: String(item.toParty || "").trim(),
-          weight: String(item.weight || "100g").trim(),
+          weightValue: (() => {
+            const w = String(item.weight || "100gm").toLowerCase().trim();
+            return parseFloat(w) || 0;
+          })(),
+          weightUnit: (() => {
+            const w = String(item.weight || "100gm").toLowerCase().trim();
+            return w.includes("kg") ? "kg" : "gm";
+          })(),
           destination: String(item.destination || "").trim(),
           amount,
           status: String(item.status || "Cash").trim(),

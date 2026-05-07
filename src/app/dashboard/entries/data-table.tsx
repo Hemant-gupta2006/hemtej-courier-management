@@ -186,7 +186,7 @@ export function DataTable<TData, TValue>({
     fromParty: "",
     destination: "",
     weightNum: "100",
-    weightUnit: "g",
+    weightUnit: "gm",
     status: "Account",
     mode: "Surface",
   });
@@ -272,12 +272,9 @@ export function DataTable<TData, TValue>({
     rowIdentifier: string,
     allData: any[]
   ): string => {
-    if (columnId === "weight") {
-      const n = String(value ?? "")
-        .replace(/g|kg/gi, "")
-        .trim();
-      if (n !== "" && isNaN(Number(n)))
-        return "Must be numeric";
+    if (columnId === "weightValue") {
+      const v = Number(value);
+      if (isNaN(v)) return "Must be numeric";
     }
     if (columnId === "amount") {
       const v = String(value ?? "").trim();
@@ -309,7 +306,7 @@ export function DataTable<TData, TValue>({
     if (!String(row.toParty ?? "").trim()) errs.toParty = "Required";
     if (!String(row.destination ?? "").trim()) errs.destination = "Required";
 
-    ["weight", "amount", "challanNo"].forEach((col) => {
+    ["weightValue", "amount", "challanNo"].forEach((col) => {
       if (!errs[col]) {
         const m = validateField(col, row[col], id, allData);
         if (m) errs[col] = m;
@@ -397,9 +394,8 @@ export function DataTable<TData, TValue>({
     challanNo: nextChallan,
     fromParty: useBatchDefaults ? batchDefaults.fromParty : "",
     toParty: "",
-    weight: useBatchDefaults
-      ? `${batchDefaults.weightNum}${batchDefaults.weightUnit}`
-      : "100g",
+    weightValue: useBatchDefaults ? parseFloat(batchDefaults.weightNum) || 0 : 100,
+    weightUnit: useBatchDefaults ? batchDefaults.weightUnit : "gm",
     destination: useBatchDefaults ? batchDefaults.destination : "",
     amount: "",
     status: useBatchDefaults ? batchDefaults.status : "Account",
@@ -580,7 +576,8 @@ export function DataTable<TData, TValue>({
             challanNo: String(rowData.challanNo).trim(),
             fromParty: capitalizeWords(rowData.fromParty || ""),
             toParty: capitalizeWords(rowData.toParty || ""),
-            weight: rowData.weight,
+            weightValue: rowData.weightValue,
+            weightUnit: rowData.weightUnit,
             destination: capitalizeWords(rowData.destination || ""),
             amount: Number(rowData.amount),
             status: rowData.status,
@@ -614,7 +611,7 @@ export function DataTable<TData, TValue>({
     ) => {
       const colOrder = [
         "date", "challanNo", "fromParty", "toParty",
-        "weight", "destination", "amount", "status", "mode",
+        "weightValue", "destination", "amount", "status", "mode",
       ];
       const idx = colOrder.indexOf(columnId);
       const row = dataRef.current.find(
@@ -714,25 +711,7 @@ export function DataTable<TData, TValue>({
   // Excel Export
   // ─────────────────────────────────────────────
 
-  const formatExportWeight = (w: string) => {
-    if (!w) return "";
-    const lower = String(w).toLowerCase().trim();
-
-    if (lower.includes("kg")) {
-      const num = parseFloat(lower);
-      return !isNaN(num) ? `${num} kg` : lower.replace(/\s+/g, "");
-    }
-
-    const g = parseFloat(lower);
-    if (isNaN(g)) return lower;
-
-    if (g >= 1000) {
-      return `${Number((g / 1000).toFixed(3))} kg`;
-    }
-
-    // Reverted logic for grams to original format
-    return `${(g / 1000).toFixed(3)}gm`;
-  };
+  // Removed local duplicate formatExportWeight. Now using src/lib/utils.ts formatWeight.
 
   const exportExcel = () => {
     // Navigate to the API route to download ALL entries without pagination
@@ -805,7 +784,7 @@ export function DataTable<TData, TValue>({
                   className="bg-transparent px-2 outline-none border-l border-white/30 dark:border-white/10 text-slate-700 dark:text-slate-300 cursor-pointer"
                 >
                   <option value="kg">kg</option>
-                  <option value="g">g</option>
+                  <option value="gm">gm</option>
                 </select>
               </div>
             </div>
@@ -858,7 +837,7 @@ export function DataTable<TData, TValue>({
                   fromParty: "",
                   destination: "",
                   weightNum: "100",
-                  weightUnit: "g",
+                  weightUnit: "gm",
                   status: "Account",
                   mode: "Surface",
                 })

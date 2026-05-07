@@ -137,11 +137,10 @@ function MobileAutoInput({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleBlur}
-          className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all relative z-10 bg-transparent ${
-            error
+          className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all relative z-10 bg-transparent ${error
               ? "border-red-500 ring-1 ring-red-500 focus-visible:ring-red-500"
               : "border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500"
-          }`}
+            }`}
           style={{ backgroundColor: "transparent" }}
         />
       </div>
@@ -171,11 +170,10 @@ function SegmentedSelect({
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${
-              value === opt
+            className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${value === opt
                 ? "bg-blue-600 border-blue-600 text-white shadow-sm"
                 : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400"
-            }`}
+              }`}
           >
             {opt}
           </button>
@@ -217,7 +215,7 @@ export function MobileEntryForm({
     fromParty: "",
     toParty: "",
     weightNum: "100",
-    weightUnit: "g",
+    weightUnit: "gm",
     destination: "",
     amount: "",
     status: "Account",
@@ -290,9 +288,9 @@ export function MobileEntryForm({
       challanNo: form.challanNo.trim(),
     };
 
-    // Build weight as grams string
-    const gramsValue = Number(cleaned.weightNum) * (cleaned.weightUnit === "kg" ? 1000 : 1);
-    const weight = `${gramsValue}g`;
+    // Build weight as separate value and unit
+    const weightValue = Number(cleaned.weightNum) || 0;
+    const weightUnit = cleaned.weightUnit;
 
     setSaving(true);
     try {
@@ -304,7 +302,8 @@ export function MobileEntryForm({
           challanNo: cleaned.challanNo,
           fromParty: cleaned.fromParty,
           toParty: cleaned.toParty,
-          weight,
+          weightValue,
+          weightUnit,
           destination: cleaned.destination,
           amount: parseFloat(cleaned.amount) || 0,
           status: cleaned.status,
@@ -416,11 +415,10 @@ export function MobileEntryForm({
                     onChange={(e) => set("challanNo", e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e, "m-from")}
                     placeholder="e.g. 1042"
-                    className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
-                      errors.challanNo
+                    className={`h-12 text-base rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.challanNo
                         ? "border-red-500 ring-1 ring-red-500"
                         : "border-slate-200 dark:border-slate-700"
-                    }`}
+                      }`}
                   />
                   {errors.challanNo && (
                     <p className="text-xs text-red-500 font-medium">{errors.challanNo}</p>
@@ -465,23 +463,21 @@ export function MobileEntryForm({
                       onChange={(e) => set("weightNum", e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, "m-dest")}
                       placeholder="100"
-                      className={`h-12 text-base rounded-xl flex-1 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
-                        errors.weight
+                      className={`h-12 text-base rounded-xl flex-1 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.weight
                           ? "border-red-500 ring-1 ring-red-500"
                           : "border-slate-200 dark:border-slate-700"
-                      }`}
+                        }`}
                     />
                     <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0">
-                      {["g", "kg"].map((u) => (
+                      {["gm", "kg"].map((u) => (
                         <button
                           key={u}
                           type="button"
                           onClick={() => set("weightUnit", u)}
-                          className={`px-5 h-12 text-sm font-semibold transition-colors ${
-                            form.weightUnit === u
+                          className={`px-5 h-12 text-sm font-semibold transition-colors ${form.weightUnit === u
                               ? "bg-blue-600 text-white"
                               : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                          }`}
+                            }`}
                         >
                           {u}
                         </button>
@@ -525,11 +521,10 @@ export function MobileEntryForm({
                       onChange={(e) => set("amount", e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, null)}
                       placeholder="0"
-                      className={`h-12 text-base rounded-xl pl-8 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${
-                        errors.amount
+                      className={`h-12 text-base rounded-xl pl-8 bg-slate-50/50 dark:bg-slate-900/50 focus-visible:ring-2 focus-visible:ring-blue-500/40 transition-all ${errors.amount
                           ? "border-red-500 ring-1 ring-red-500"
                           : "border-slate-200 dark:border-slate-700"
-                      }`}
+                        }`}
                     />
                   </div>
                   {errors.amount && (

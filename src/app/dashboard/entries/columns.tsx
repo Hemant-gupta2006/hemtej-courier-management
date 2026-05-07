@@ -249,25 +249,11 @@ const EditableCell = ({ getValue, row, column, table }: any) => {
 // WeightCell — numeric + kg/g unit selector
 // ───────────────────────────────────────────
 const WeightCell = ({ getValue, row, column, table }: any) => {
-  const rawValue = String(getValue() ?? "100g");
+  const value = getValue();
+  const unitValue = row.original.weightUnit || "gm";
 
-  const parseWeight = (v: string) => {
-    const lower = v.toLowerCase().trim();
-    if (lower.endsWith("kg")) return { num: lower.replace("kg", "").trim(), unit: "kg" };
-    if (lower.endsWith("g")) return { num: lower.replace(/g$/, "").trim(), unit: "g" };
-    return { num: v, unit: "kg" };
-  };
-
-  const toDisplayGrams = (raw: string) => {
-    if (!raw.endsWith("g") || raw.endsWith("kg")) return parseWeight(raw);
-    const g = parseFloat(raw);
-    if (isNaN(g)) return parseWeight(raw);
-    return g >= 1000 ? { num: String(g / 1000), unit: "kg" } : { num: String(g), unit: "g" };
-  };
-
-  const init = toDisplayGrams(rawValue);
-  const [num, setNum] = useState(init.num);
-  const [unit, setUnit] = useState(init.unit);
+  const [num, setNum] = useState(String(value ?? ""));
+  const [unit, setUnit] = useState(unitValue);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const identifier: string = row.original.tempId || row.original.id;
@@ -275,20 +261,15 @@ const WeightCell = ({ getValue, row, column, table }: any) => {
   const error: string | undefined = table.options.meta?.errorsRef?.current?.[identifier]?.[column.id];
 
   useEffect(() => {
-    const d = toDisplayGrams(String(getValue() ?? "100g"));
-    setNum(d.num);
-    setUnit(d.unit);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [row.original.tempId, row.original.id]);
+    setNum(String(getValue() ?? ""));
+    setUnit(row.original.weightUnit || "gm");
+  }, [row.original.tempId, row.original.id, getValue(), row.original.weightUnit]);
 
-  const buildStored = (n: string, u: string) => {
-    const parsed = parseFloat(n);
-    if (isNaN(parsed)) return `${n}g`;
-    return `${u === "kg" ? parsed * 1000 : parsed}g`;
+  const onBlur = () => {
+    const val = parseFloat(num) || 0;
+    table.options.meta?.updateData(identifier, "weightValue", val);
+    table.options.meta?.updateData(identifier, "weightUnit", unit);
   };
-
-  const onBlur = () =>
-    table.options.meta?.updateData(identifier, column.id, buildStored(num, unit));
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) =>
     table.options.meta?.handleCellKeyDown(e, identifier, column.id, inputRef.current);
@@ -316,14 +297,14 @@ const WeightCell = ({ getValue, row, column, table }: any) => {
         onValueChange={(v) => {
           const u = v || "kg";
           setUnit(u);
-          table.options.meta?.updateData(identifier, column.id, buildStored(num, u));
+          table.options.meta?.updateData(identifier, "weightUnit", u);
         }}
       >
         <SelectTrigger className="w-[48px] h-8 px-1 bg-slate-800/60 dark:bg-slate-800/40 border border-white/10 rounded-md appearance-none text-xs text-slate-400 hover:bg-slate-800/80 focus:ring-1 focus:ring-blue-500/40 focus:bg-slate-800/80 focus-visible:ring-offset-0 text-center">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="rounded-lg shadow-lg">
-          <SelectItem value="g" className="rounded-md">g</SelectItem>
+          <SelectItem value="gm" className="rounded-md">gm</SelectItem>
           <SelectItem value="kg" className="rounded-md">kg</SelectItem>
         </SelectContent>
       </Select>
@@ -344,12 +325,12 @@ export const columns: ColumnDef<CourierEntry>[] = [
       // 1. Get all currently visible rows and identify this row's position
       const visibleRows = table.getSortedRowModel().flatRows;
       const rowIndex = visibleRows.findIndex((r) => r.id === row.id);
-      
+
       // 2. Retrieve pagination and offset data gracefully passed from DataTable
       const meta = table.options.meta as any;
       const pageIndex = meta?.pageIndex ?? 0;
       const pageSize = meta?.pageSize ?? (visibleRows.length > 0 ? visibleRows.length : 50);
-      
+
       // Obtain static Count from backend and offset it by any local (optimistic/deleted) modifiers
       const staticTotalCount = meta?.totalCount ?? 0;
       const localRowOffset = meta?.localRowOffset ?? 0;
@@ -437,7 +418,7 @@ export const columns: ColumnDef<CourierEntry>[] = [
     cell: AutocompleteCell
   },
   {
-    accessorKey: "weight",
+    accessorKey: "weightValue",
     header: "Weight",
     size: 90,
     cell: WeightCell
@@ -470,10 +451,10 @@ export const columns: ColumnDef<CourierEntry>[] = [
               <PopoverContent className="w-40 p-2 bg-slate-900 border-white/10" align="start">
                 <div className="flex flex-col gap-1">
                   {["all", "Account", "Cash"].map(s => (
-                    <Button 
-                      key={s} 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      key={s}
+                      variant="ghost"
+                      size="sm"
                       className={`justify-start text-xs h-8 ${filters.statusFilter === s ? 'bg-purple-500/20 text-purple-400' : 'text-slate-300'} hover:bg-slate-800`}
                       onClick={() => {
                         const newStatus = (filters.statusFilter === s && s !== "all") ? "all" : s;

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import * as XLSX from "xlsx";
+import { formatWeight } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -11,7 +12,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const dateStr = searchParams.get("date") || new Date().toISOString().split('T')[0];
-    
+
     const targetDate = new Date(dateStr);
     const nextDate = new Date(targetDate);
     nextDate.setDate(targetDate.getDate() + 1);
@@ -35,11 +36,6 @@ export async function GET(req: Request) {
       return new NextResponse("No entries found for this date", { status: 404 });
     }
 
-    const formatWeight = (w: string) => {
-      const g = parseFloat(w);
-      if (isNaN(g)) return w;
-      return g >= 1000 ? `${(g / 1000).toFixed(3)} kg` : `${g}g`;
-    };
 
     // Prepare data for Excel
     const data = entries.map((e, index) => ({
@@ -48,13 +44,13 @@ export async function GET(req: Request) {
       "From Party": e.fromParty,
       "To Party": e.toParty,
       "Destination": e.destination,
-      "Weight": formatWeight(e.weight),
+      "Weight": formatWeight(e.weightValue, e.weightUnit),
       "Mode": e.mode || "Surface",
       "Status": e.status,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
-    
+
     // Set column widths
     const colWidths = [
       { wch: 8 },  // Sr.No

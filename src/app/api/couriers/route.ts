@@ -24,12 +24,12 @@ export async function GET(req: Request) {
     const startDateParam = searchParams.get("startDate");
     const endDateParam = searchParams.get("endDate");
     const statusParam = searchParams.get("status");
-    
+
     // Determine pagination parameters
     const take = limitParam ? parseInt(limitParam, 10) : undefined;
     const page = pageParam ? parseInt(pageParam, 10) : 1;
     let skip = undefined;
-    
+
     if (take && page) {
       skip = (page - 1) * take;
     }
@@ -79,8 +79,8 @@ export async function GET(req: Request) {
 
     const totalPages = take ? Math.ceil(total / take) : 1;
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data: couriers,
       total,
       currentPage: page,
@@ -117,7 +117,23 @@ export async function POST(req: Request) {
     const date = body.date && !isNaN(Date.parse(body.date)) ? new Date(body.date) : new Date();
     const fromParty = String(body.fromParty || "").trim();
     const toParty = String(body.toParty || "").trim();
-    const weight = String(body.weight || "100g").trim();
+    let weightValue: number;
+    let weightUnit: string;
+
+    if (body.weightValue !== undefined) {
+      weightValue = Number(body.weightValue) || 0;
+      weightUnit = String(body.weightUnit || "gm").trim();
+    } else {
+      // Fallback for string weight
+      const w = String(body.weight || "0gm").toLowerCase().trim();
+      if (w.includes("kg")) {
+        weightValue = parseFloat(w) || 0;
+        weightUnit = "kg";
+      } else {
+        weightValue = parseFloat(w) || 0;
+        weightUnit = "gm";
+      }
+    }
     const destination = String(body.destination || "").trim();
     const amount = Number(body.amount) || 0;
     const status = String(body.status || "Cash").trim();
@@ -160,7 +176,8 @@ export async function POST(req: Request) {
               challanNo: nextChallanNo,
               fromParty,
               toParty,
-              weight,
+              weightValue,
+              weightUnit,
               destination,
               amount,
               status,
@@ -172,7 +189,7 @@ export async function POST(req: Request) {
       } catch (error: any) {
         if (error.code === 'P2002') {
           if (body.challanNo) {
-             throw new Error("DUPLICATE_CHALLAN_USER_PROVIDED");
+            throw new Error("DUPLICATE_CHALLAN_USER_PROVIDED");
           }
           attempts++;
           if (attempts === MAX_RETRIES) throw error;

@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+import { formatWeight } from "@/lib/utils";
+
 export async function GET() {
   let userId = "unknown";
   try {
@@ -23,10 +25,10 @@ export async function GET() {
         destination: true,
         fromParty: true,
         toParty: true,
-        weight: true,
+        weightValue: true,
+        weightUnit: true,
         status: true,
       },
-      distinct: ['destination', 'fromParty', 'toParty', 'weight', 'status'],
       take: 1000, 
       orderBy: { createdAt: 'desc' }
     });
@@ -34,7 +36,7 @@ export async function GET() {
     const destinations = Array.from(new Set(couriers.map(c => c.destination).filter(Boolean)));
     const fromParties = Array.from(new Set(couriers.map(c => c.fromParty).filter(Boolean)));
     const toParties = Array.from(new Set(couriers.map(c => c.toParty).filter(Boolean)));
-    const weights = Array.from(new Set(couriers.map(c => c.weight).filter(Boolean)));
+    const weights = Array.from(new Set(couriers.map(c => formatWeight(c.weightValue, c.weightUnit)).filter(Boolean)));
     const statuses = Array.from(new Set(couriers.map(c => c.status).filter(Boolean)));
 
     return NextResponse.json({

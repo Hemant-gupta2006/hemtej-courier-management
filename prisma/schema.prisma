@@ -69,7 +69,8 @@ model CourierEntry {
   challanNo   Int
   fromParty   String
   toParty     String
-  weight      String
+  weightValue Float
+  weightUnit  String   @default("gm")
   destination String
   amount      Float
   status      String   // Cash, Account, Pending, Delivered
