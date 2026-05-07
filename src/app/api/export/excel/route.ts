@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import * as XLSX from "xlsx";
+import { formatWeight } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -15,26 +16,6 @@ export async function GET(req: Request) {
       orderBy: { srNo: 'asc' },
     });
 
-    const formatExportWeight = (weightStr: string | null) => {
-      if (!weightStr) return "";
-      const lower = String(weightStr).toLowerCase().trim();
-
-      if (lower.includes("kg")) {
-        const num = parseFloat(lower);
-        return !isNaN(num) ? `${num} kg` : lower.replace(/\s+/g, "");
-      }
-
-      const g = parseFloat(lower);
-      if (isNaN(g)) return lower;
-
-      if (g >= 1000) {
-        return `${Number((g / 1000).toFixed(3))} kg`;
-      }
-
-      // Reverted logic for grams to original format
-      return `${(g / 1000).toFixed(3)}gm`;
-    };
-
     const tableData = couriers.map(row => ({
       "Sr.No": Number(row.srNo) || 0,
       "Date": new Date(row.date),
@@ -42,7 +23,7 @@ export async function GET(req: Request) {
       "From Party": row.fromParty,
       "To Party": row.toParty,
       "Destination": row.destination,
-      "Weight": formatExportWeight(row.weight),
+      "Weight": formatWeight(row.weightValue, row.weightUnit),
       "Amount": Number(row.amount) || 0,
       "Status": row.status,
       "Mode": row.mode
