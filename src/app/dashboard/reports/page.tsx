@@ -1,14 +1,15 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, Calendar, User, Settings2 } from "lucide-react";
+import { Download, FileText, Calendar, User, Settings2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { getAutocompleteData } from "@/lib/autocomplete";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export default function ReportsPage() {
   const [manifestDate, setManifestDate] = useState(new Date().toISOString().split('T')[0]);
@@ -33,9 +34,28 @@ export default function ReportsPage() {
     businessContact: "+91 9892796228",
     businessGst: "27AYDPG0955B1ZV",
   });
-  const filteredParties = parties
+  const [isManifestLoading, setIsManifestLoading] = useState(false);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+
+  const filteredParties = useMemo(() => parties
     .filter(p => p.toLowerCase().includes(billingParty.toLowerCase()))
-    .slice(0, 50);
+    .slice(0, 5), [parties, billingParty]);
+
+  const isValidParty = useMemo(() => 
+    parties.some(p => p.toLowerCase() === billingParty.toLowerCase().trim()),
+  [parties, billingParty]);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const dateError = useMemo(() => {
+    if (!billingFromDate || !billingToDate) return "";
+    if (billingFromDate > billingToDate) return "End date must be after start date";
+    if (billingFromDate > today || billingToDate > today) return "Future dates are not allowed";
+    return "";
+  }, [billingFromDate, billingToDate, today]);
+
+  const isManifestValid = !!manifestDate && manifestDate <= today;
+  const isBillingValid = !!billingFromDate && !!billingToDate && !!billingParty && isValidParty && !dateError;
 
   useEffect(() => {
     getAutocompleteData().then(data => {
@@ -43,26 +63,41 @@ export default function ReportsPage() {
     });
   }, []);
 
-  const downloadManifest = () => {
-    if (!manifestDate) {
-      toast.error("Please select a date for manifest");
-      return;
+  const downloadManifest = async () => {
+    if (!isManifestValid || isManifestLoading) return;
+    
+    setIsManifestLoading(true);
+    try {
+      window.location.href = `/api/reports/manifest?date=${manifestDate}`;
+      // Give it some time to start the download before enabling button again
+      setTimeout(() => setIsManifestLoading(false), 2000);
+    } catch (error) {
+      toast.error("Failed to generate manifest");
+      setIsManifestLoading(false);
     }
-    window.location.href = `/api/reports/manifest?date=${manifestDate}`;
   };
 
-  const downloadBilling = () => {
-    const params = new URLSearchParams();
-    if (billingFromDate) params.append("startDate", billingFromDate);
-    if (billingToDate) params.append("endDate", billingToDate);
-    if (billingParty) params.append("fromParty", billingParty);
+  const downloadBilling = async () => {
+    if (!isBillingValid || isBillingLoading) return;
 
-    // Add advanced details if they are different from defaults or non-empty
-    Object.entries(advancedDetails).forEach(([key, value]) => {
-      if (value) params.append(key, value);
-    });
+    setIsBillingLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (billingFromDate) params.append("startDate", billingFromDate);
+      if (billingToDate) params.append("endDate", billingToDate);
+      if (billingParty) params.append("fromParty", billingParty);
 
-    window.location.href = `/api/reports/billing?${params.toString()}`;
+      // Add advanced details
+      Object.entries(advancedDetails).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      window.location.href = `/api/reports/billing?${params.toString()}`;
+      setTimeout(() => setIsBillingLoading(false), 2000);
+    } catch (error) {
+      toast.error("Failed to generate billing report");
+      setIsBillingLoading(false);
+    }
   };
 
   return (
@@ -97,14 +132,36 @@ export default function ReportsPage() {
               </label>
               <Input
                 type="date"
+                max={today}
                 value={manifestDate}
                 onChange={(e) => setManifestDate(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && downloadManifest()}
-                className="rounded-xl h-11"
+                className={cn(
+                  "rounded-xl h-11 transition-all",
+                  manifestDate > today && "border-destructive focus-visible:ring-destructive"
+                )}
               />
+              {manifestDate > today && (
+                <p className="text-[10px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle className="h-3 w-3" /> Cannot select future date
+                </p>
+              )}
             </div>
-            <Button onClick={downloadManifest} className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20">
-              <Download className="mr-2 h-4 w-4" /> Download Manifest (Excel)
+            <Button 
+              onClick={downloadManifest} 
+              disabled={!isManifestValid || isManifestLoading}
+              className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              {isManifestLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating Manifest...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" /> Download Manifest (Excel)
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -128,29 +185,42 @@ export default function ReportsPage() {
                 <label className="text-sm font-semibold">From Date</label>
                 <Input
                   type="date"
+                  max={today}
                   value={billingFromDate}
                   onChange={(e) => setBillingFromDate(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && downloadBilling()}
-                  className="rounded-xl h-11"
+                  className={cn(
+                    "rounded-xl h-11",
+                    (billingFromDate > today || (billingFromDate && billingToDate && billingFromDate > billingToDate)) && "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold">To Date</label>
                 <Input
                   type="date"
+                  max={today}
                   value={billingToDate}
                   onChange={(e) => setBillingToDate(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && downloadBilling()}
-                  className="rounded-xl h-11"
+                  className={cn(
+                    "rounded-xl h-11",
+                    (billingToDate > today || (billingFromDate && billingToDate && billingFromDate > billingToDate)) && "border-destructive focus-visible:ring-destructive"
+                  )}
                 />
               </div>
             </div>
+            {dateError && (
+              <p className="text-[10px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="h-3 w-3" /> {dateError}
+              </p>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-semibold flex items-center gap-2">
-                <User className="h-4 w-4" /> Filter by Party (Optional)
+                <User className="h-4 w-4" /> Party Name (Required)
               </label>
               <div className="relative">
-                {/* Ghost suggestion layer */}
                 {billingParty.length > 0 && filteredParties[0] && filteredParties[0].toLowerCase().startsWith(billingParty.toLowerCase()) && (
                   <div className="absolute inset-0 flex items-center px-3 pointer-events-none text-slate-400 dark:text-slate-500 z-0 h-11 text-sm">
                     <span className="opacity-0">{billingParty}</span>
@@ -173,10 +243,18 @@ export default function ReportsPage() {
                       downloadBilling();
                     }
                   }}
-                  className="rounded-xl h-11 relative z-10"
+                  className={cn(
+                    "rounded-xl h-11 relative z-10",
+                    billingParty && !isValidParty && "border-destructive focus-visible:ring-destructive"
+                  )}
                   style={{ backgroundColor: 'transparent' }}
                 />
               </div>
+              {billingParty && !isValidParty && (
+                <p className="text-[10px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle className="h-3 w-3" /> Invalid party name
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -362,8 +440,21 @@ export default function ReportsPage() {
                 </DialogContent>
               </Dialog>
 
-              <Button onClick={downloadBilling} className="w-full h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20">
-                <Download className="mr-2 h-4 w-4" /> Generate Billing Report
+              <Button 
+                onClick={downloadBilling} 
+                disabled={!isBillingValid || isBillingLoading}
+                className="w-full h-11 rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+              >
+                {isBillingLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating Report...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" /> Generate Billing Report
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
